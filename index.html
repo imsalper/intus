@@ -1006,17 +1006,55 @@
     inputModal.classList.add('show');
   }
 
-  /* BARCODE DETECTION HANDLER */
+  /* SMART BARCODE & KAREKOD (QR CODE) HANDLER */
   function onBarcodeDetected(decodedText) {
-    if (scanCooldown) return;
+    if (scanCooldown || !decodedText) return;
     scanCooldown = true;
-    lastScannedCode = decodedText.trim();
+    const raw = decodedText.trim();
     
     // Animate scan frame on hit
     scanFrame.style.borderColor = 'var(--amber)';
     setTimeout(() => { scanFrame.style.borderColor = ''; }, 600);
 
-    fetchBarcodeFromAPI(lastScannedCode);
+    // 1. Check if QR code contains a standard barcode number or GS1 Digital Link
+    // GS1 QR codes often look like: https://brand.com/01/08690123456789... or contain digits
+    const digitsOnly = raw.replace(/\D/g, '');
+    const barcodeMatch = raw.match(/\b([0-9]{8,14})\b/);
+
+    if (barcodeMatch && barcodeMatch[1]) {
+      // It contains a standard 8-14 digit barcode (EAN-8, EAN-13, UPC)
+      fetchBarcodeFromAPI(barcodeMatch[1]);
+    } else if (digitsOnly.length >= 8 && digitsOnly.length <= 14) {
+      fetchBarcodeFromAPI(digitsOnly);
+    } else if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      // QR code is a web link (e.g. digital product passport or menu)
+      showToast('🔗 Karekod web bağlantısı algılandı.');
+      showLoading('Karekod bağlantısı inceleniyor…');
+      setTimeout(() => {
+        hideLoading();
+        // If it looks like a food link, analyze or open
+        const analyzed = analyzeProduct({
+          product_name: 'Karekod Ürün Bilgisi',
+          brands: new URL(raw).hostname.replace('www.', ''),
+          raw_text: raw
+        });
+        displayResult(analyzed);
+      }, 600);
+    } else {
+      // QR code contains raw text or ingredients
+      showLoading('Karekod içeriği tahlil ediliyor…');
+      setTimeout(() => {
+        hideLoading();
+        const analyzed = analyzeProduct({
+          product_name: 'Karekod İçeriği',
+          brands: 'Doğrudan Veri',
+          raw_text: raw
+        });
+        displayResult(analyzed);
+        showToast('✓ Karekod başarıyla okundu!');
+      }, 500);
+    }
+
     setTimeout(() => { scanCooldown = false; }, 3500);
   }
 
