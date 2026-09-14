@@ -1,0 +1,17 @@
+{
+  "name": "Intus — Gıda & İçerik Röntgeni",
+  "short_name": "Intus",
+  "description": "Market ürünlerinin barkodunu ve içindekiler listesini tek tuşla tarayın; vücuttan atılım süresi, tetiklediği hastalıklar ve gizli katkı maddelerini anında öğrenin.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0c10",
+  "theme_color": "#0a0c10",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,1162 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Intus — Gıda & İçerik Röntgeni</title>
+<meta name="description" content="Market ürünlerini tek dokunuşla tarayın; vücuttan atılım süresini, tetiklediği hastalıkları ve gizli katkı maddelerini saniyeler içinde öğrenin." />
+<meta name="theme-color" content="#090a0f" />
+<link rel="icon" type="image/png" href="icon.png" />
+<link rel="apple-touch-icon" href="icon.png" />
+<link rel="manifest" href="manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+<!-- Html5-QRCode for universal cross-browser barcode scanning -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<style>
+  :root {
+    --bg: #090a0f;
+    --surface: #12151e;
+    --surface-glass: rgba(18, 21, 30, 0.82);
+    --surface-card: #191d2a;
+    --border: #262c3e;
+    --border-light: rgba(255, 255, 255, 0.08);
+    --text: #f3f4f6;
+    --text-muted: #9ba1b5;
+    --text-faint: #636a82;
+    --emerald: #10b981;
+    --emerald-glow: rgba(16, 185, 129, 0.35);
+    --amber: #f59e0b;
+    --amber-glow: rgba(245, 158, 11, 0.35);
+    --crimson: #ef4444;
+    --crimson-glow: rgba(239, 68, 68, 0.35);
+    --radius: 20px;
+    --radius-sm: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body, html {
+    width: 100%; height: 100%; overflow: hidden;
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* MAIN APP CONTAINER */
+  .app-container {
+    position: relative; width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+  }
+
+  /* TOP HEADER (FLOATING GLASS) */
+  .header {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 20px;
+    background: linear-gradient(180deg, rgba(9,10,15,0.85) 0%, rgba(9,10,15,0) 100%);
+    pointer-events: none;
+  }
+  .header > * { pointer-events: auto; }
+  .brand {
+    display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text);
+  }
+  .brand-logo {
+    width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: 0 0 16px var(--emerald-glow);
+  }
+  .brand-text {
+    font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ffffff 40%, #a1a1aa 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .brand-tag {
+    font-size: 10.5px; font-weight: 700; color: var(--emerald); text-transform: uppercase;
+    letter-spacing: 0.8px; margin-left: 2px;
+  }
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--surface-glass); backdrop-filter: blur(10px);
+    border: 1px solid var(--border-light); color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .15s ease; font-size: 17px;
+  }
+  .icon-btn:hover { background: var(--surface-card); transform: scale(1.05); }
+
+  /* CAMERA VIEWFINDER VIEWPORT */
+  .viewport {
+    position: relative; width: 100%; height: 100%; flex: 1;
+    overflow: hidden; background: #000;
+  }
+  #scannerReader {
+    width: 100% !important; height: 100% !important;
+    position: absolute; inset: 0; object-fit: cover;
+  }
+  #scannerReader video {
+    width: 100% !important; height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  /* CAMERA DARK OVERLAY WITH CUTOUT */
+  .camera-overlay {
+    position: absolute; inset: 0; pointer-events: none; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+
+  /* SCANNING FRAME */
+  .scan-frame {
+    position: relative; width: 270px; height: 270px;
+    border-radius: 28px;
+    box-shadow: 0 0 0 9999px rgba(9, 10, 15, 0.62);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .scan-frame::before, .scan-frame::after {
+    content: ''; position: absolute; width: 34px; height: 34px;
+    border-color: var(--emerald); border-style: solid;
+  }
+  /* Top-left & Top-right corners */
+  .scan-frame::before {
+    top: -2px; left: -2px; border-width: 4px 0 0 4px; border-top-left-radius: 24px;
+  }
+  .scan-frame::after {
+    top: -2px; right: -2px; border-width: 4px 4px 0 0; border-top-right-radius: 24px;
+  }
+  .corner-bottom-left, .corner-bottom-right {
+    position: absolute; width: 34px; height: 34px;
+    border-color: var(--emerald); border-style: solid;
+  }
+  .corner-bottom-left {
+    bottom: -2px; left: -2px; border-width: 0 0 4px 4px; border-bottom-left-radius: 24px;
+  }
+  .corner-bottom-right {
+    bottom: -2px; right: -2px; border-width: 0 4px 4px 0; border-bottom-right-radius: 24px;
+  }
+
+  /* LASER SCANNING ANIMATION */
+  .scan-laser {
+    position: absolute; left: 10px; right: 10px; height: 3px;
+    background: linear-gradient(90deg, transparent 0%, var(--emerald) 50%, transparent 100%);
+    box-shadow: 0 0 16px var(--emerald), 0 0 28px var(--emerald);
+    border-radius: 2px;
+    animation: laserScan 2.4s ease-in-out infinite alternate;
+  }
+  @keyframes laserScan {
+    0% { top: 12px; opacity: 0.2; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { top: calc(100% - 15px); opacity: 0.2; }
+  }
+
+  .scan-instructions {
+    position: absolute; top: calc(50% + 155px);
+    font-size: 13.5px; font-weight: 600; color: #fff;
+    background: rgba(18, 21, 30, 0.85); backdrop-filter: blur(8px);
+    padding: 8px 18px; border-radius: 30px; border: 1px solid var(--border-light);
+    display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    white-space: nowrap; pointer-events: none;
+  }
+  .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--emerald); animation: blink 1.4s infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+  /* BOTTOM ACTION CONTROLS */
+  .bottom-bar {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 20;
+    padding: 24px 20px 32px;
+    background: linear-gradient(0deg, rgba(9,10,15,0.95) 0%, rgba(9,10,15,0.7) 70%, rgba(9,10,15,0) 100%);
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+
+  /* QUICK DEMO PRESETS ROW */
+  .demo-presets {
+    width: 100%; max-width: 500px;
+    display: flex; gap: 8px; overflow-x: auto; padding: 4px 4px 8px;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .demo-presets::-webkit-scrollbar { display: none; }
+  .demo-pill {
+    flex: none; display: flex; align-items: center; gap: 6px;
+    background: var(--surface-glass); backdrop-filter: blur(10px);
+    border: 1px solid var(--border-light); color: var(--text-muted);
+    font-size: 12px; font-weight: 600; padding: 7px 13px; border-radius: 20px;
+    cursor: pointer; transition: all .15s ease; white-space: nowrap;
+  }
+  .demo-pill:hover, .demo-pill:active {
+    background: var(--surface-card); color: var(--text); border-color: var(--emerald);
+    transform: translateY(-2px);
+  }
+
+  .action-controls {
+    display: flex; align-items: center; justify-content: center; gap: 24px;
+    width: 100%; max-width: 400px;
+  }
+
+  /* BIG TRIGGER BUTTON */
+  .big-scan-btn {
+    position: relative; width: 76px; height: 76px; border-radius: 50%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: 4px solid #fff; box-shadow: 0 0 28px var(--emerald-glow), 0 8px 24px rgba(0,0,0,0.6);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .big-scan-btn:active { transform: scale(0.92); box-shadow: 0 0 16px var(--emerald-glow); }
+  .big-scan-btn .inner-circle {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: rgba(255,255,255,0.18); border: 2px solid rgba(255,255,255,0.4);
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+  }
+
+  .secondary-btn {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--surface-glass); backdrop-filter: blur(10px);
+    border: 1px solid var(--border-light); color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 19px; transition: all .15s ease;
+  }
+  .secondary-btn:hover { background: var(--surface-card); transform: scale(1.06); }
+  .secondary-label { font-size: 11px; color: var(--text-faint); margin-top: 4px; font-weight: 600; text-align: center; }
+
+  /* SLIDING BOTTOM SHEET FOR RESULTS */
+  .bottom-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+    max-height: 88vh; min-height: 48vh;
+    background: var(--surface); border-top: 1px solid var(--border);
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -16px 50px rgba(0,0,0,0.75);
+    display: flex; flex-direction: column;
+    transform: translateY(102%); transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    overflow: hidden;
+  }
+  .bottom-sheet.open { transform: translateY(0); }
+
+  .sheet-handle-bar {
+    width: 100%; padding: 12px 0 4px; display: flex; justify-content: center;
+    cursor: grab; flex: none;
+  }
+  .sheet-handle {
+    width: 44px; height: 5px; border-radius: 10px; background: var(--border);
+  }
+
+  .sheet-content {
+    flex: 1; overflow-y: auto; padding: 14px 22px 40px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sheet-content::-webkit-scrollbar { width: 5px; }
+  .sheet-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+  /* PRODUCT SUMMARY HERO */
+  .result-hero {
+    display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;
+    padding-bottom: 18px; border-bottom: 1px solid var(--border-light);
+  }
+  .product-thumb {
+    width: 76px; height: 76px; border-radius: 16px; object-fit: cover;
+    background: var(--surface-card); border: 1px solid var(--border); flex: none;
+  }
+  .product-details { flex: 1; }
+  .product-name {
+    font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.3;
+    color: var(--text); margin-bottom: 4px;
+  }
+  .product-brand {
+    font-size: 13px; color: var(--text-muted); font-weight: 500;
+  }
+
+  /* TRAFFIC LIGHT BADGE */
+  .verdict-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-radius: var(--radius-sm); margin-bottom: 20px;
+    font-weight: 700; font-size: 15px; border: 1px solid transparent;
+  }
+  .verdict-banner.clean {
+    background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3); color: #34d399;
+  }
+  .verdict-banner.caution {
+    background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.3); color: #fbbf24;
+  }
+  .verdict-banner.danger {
+    background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.35); color: #f87171;
+  }
+  .verdict-score {
+    font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800;
+  }
+
+  /* ELIMINATION / CLEARANCE TIMELINE CARD */
+  .elimination-card {
+    background: var(--surface-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 18px; margin-bottom: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  .card-header-flex {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px;
+  }
+  .elimination-badge {
+    font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 800;
+    color: var(--amber); background: rgba(245, 158, 11, 0.12); padding: 4px 12px; border-radius: 20px;
+  }
+  .elimination-badge.fast { color: var(--emerald); background: rgba(16, 185, 129, 0.12); }
+  .elimination-badge.slow { color: var(--crimson); background: rgba(239, 68, 68, 0.15); }
+
+  .clearance-meter {
+    width: 100%; height: 8px; background: rgba(255,255,255,0.06);
+    border-radius: 10px; overflow: hidden; margin: 10px 0 12px;
+  }
+  .clearance-progress {
+    height: 100%; border-radius: 10px; transition: width 1s ease-out;
+  }
+  .clearance-desc {
+    font-size: 13px; color: var(--text-muted); line-height: 1.55;
+  }
+
+  /* HEALTH RISKS & DISEASES GRID */
+  .risk-section { margin-bottom: 20px; }
+  .risk-section-title {
+    font-size: 13px; font-weight: 700; color: var(--text-faint); text-transform: uppercase;
+    letter-spacing: 0.6px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+  }
+  .risk-grid { display: flex; flex-direction: column; gap: 10px; }
+  .risk-item {
+    display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;
+    background: var(--surface-card); border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+  }
+  .risk-icon {
+    font-size: 18px; flex: none; margin-top: 1px;
+  }
+  .risk-text-name { font-size: 13.5px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .risk-text-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.45; }
+
+  /* ADDITIVES / INGREDIENTS LIST */
+  .additives-tag-cloud {
+    display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px;
+  }
+  .additive-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  }
+  .additive-pill.danger {
+    background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5;
+  }
+  .additive-pill.caution {
+    background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); color: #fde68a;
+  }
+  .additive-pill.clean {
+    background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #a7f3d0;
+  }
+
+  /* ALTERNATIVE RECOMMENDATION CARD */
+  .alt-card {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(18, 21, 30, 0.9) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm);
+    padding: 16px; margin-bottom: 24px;
+  }
+  .alt-title { font-size: 13px; font-weight: 700; color: var(--emerald); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .alt-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+
+  /* SHEET BOTTOM BUTTON */
+  .sheet-actions {
+    display: flex; gap: 10px; margin-top: 10px;
+  }
+  .sheet-btn {
+    flex: 1; padding: 14px; border-radius: var(--radius-sm); border: none;
+    font-size: 14.5px; font-weight: 700; cursor: pointer; transition: opacity .15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .sheet-btn.primary {
+    background: #ffffff; color: #090a0f;
+  }
+  .sheet-btn.primary:hover { opacity: 0.9; }
+
+  /* MANUAL TEXT / PHOTO MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    z-index: 150; display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    max-width: 480px; width: 100%; padding: 24px; box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .modal-header h3 { font-size: 18px; font-weight: 700; }
+  .modal-close { background: transparent; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
+  .modal-close:hover { color: var(--text); }
+  .modal-input {
+    width: 100%; background: var(--surface-card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; color: var(--text); font-size: 14.5px; margin-bottom: 14px; outline: none;
+  }
+  textarea.modal-input { min-height: 120px; line-height: 1.5; resize: vertical; }
+  .modal-btn {
+    width: 100%; padding: 13px; background: var(--emerald); color: #062419;
+    border: none; border-radius: 12px; font-weight: 700; font-size: 14.5px; cursor: pointer;
+  }
+
+  /* LOADING SPINNER OVERLAY */
+  .loading-overlay {
+    position: fixed; inset: 0; background: rgba(9,10,15,0.85); backdrop-filter: blur(10px);
+    z-index: 90; display: none; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .loading-overlay.show { display: flex; }
+  .spinner {
+    width: 52px; height: 52px; border: 4px solid var(--border);
+    border-top-color: var(--emerald); border-radius: 50%;
+    animation: spin 0.9s linear infinite; margin-bottom: 18px;
+  }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  .loading-text { font-size: 15px; font-weight: 600; color: var(--text); }
+  .loading-subtext { font-size: 12.5px; color: var(--text-faint); margin-top: 6px; }
+
+  /* TOAST NOTIFICATION */
+  .toast {
+    position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+    background: #1c2130; border: 1px solid var(--border); color: var(--text);
+    padding: 10px 22px; border-radius: 30px; font-size: 13px; font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 200; opacity: 0;
+    pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(8px); }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- Floating Glass Header -->
+  <header class="header">
+    <a href="#" class="brand">
+      <img src="icon.png" alt="Intus" class="brand-logo" />
+      <div>
+        <span class="brand-text">Intus</span>
+        <span class="brand-tag">BioScan</span>
+      </div>
+    </a>
+    <div class="header-actions">
+      <button type="button" class="icon-btn" id="flipCameraBtn" title="Kamera Değiştir">🔄</button>
+      <button type="button" class="icon-btn" id="manualInputBtn" title="Elle Barkod veya İçerik Yaz">⌨️</button>
+    </div>
+  </header>
+
+  <!-- Live Camera Viewport -->
+  <main class="viewport">
+    <div id="scannerReader"></div>
+
+    <!-- Scanner Target Visuals -->
+    <div class="camera-overlay">
+      <div class="scan-frame" id="scanFrame">
+        <div class="scan-laser"></div>
+        <div class="corner-bottom-left"></div>
+        <div class="corner-bottom-right"></div>
+      </div>
+      <div class="scan-instructions" id="scanInstructions">
+        <span class="pulse-dot"></span>
+        <span>Barkodu veya İçindekiler Kısmını Çerçeveleyin</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Floating Control Bar -->
+  <footer class="bottom-bar">
+    <!-- Quick Demo Presets for Testing Anywhere -->
+    <div class="demo-presets">
+      <button type="button" class="demo-pill" onclick="runDemo('nutella')">🌰 Kakaolu Fındık Kreması</button>
+      <button type="button" class="demo-pill" onclick="runDemo('chips')">🥔 Baharatlı Patates Cipsi</button>
+      <button type="button" class="demo-pill" onclick="runDemo('energy')">⚡ Gazlı Enerji İçeceği</button>
+      <button type="button" class="demo-pill" onclick="runDemo('oliveoil')">🫒 Soğuk Sıkım Zeytinyağı</button>
+      <button type="button" class="demo-pill" onclick="runDemo('babyoats')">👶 Katkısız Bebek Yulafı</button>
+      <button type="button" class="demo-pill" onclick="runDemo('yogurt')">🥛 Doğal Probiyotik Yoğurt</button>
+    </div>
+
+    <!-- Primary Action Controls -->
+    <div class="action-controls">
+      <!-- Gallery Upload File Picker -->
+      <div>
+        <label for="galleryInput" class="secondary-btn" title="Galeriden Etiket Yükle">🖼️</label>
+        <input type="file" id="galleryInput" accept="image/*" style="display:none;" />
+        <div class="secondary-label">Galeri</div>
+      </div>
+
+      <!-- Center Big Single Scan Button -->
+      <button type="button" class="big-scan-btn" id="triggerScanBtn" title="Şimdi Tara">
+        <div class="inner-circle">📸</div>
+      </button>
+
+      <!-- Manual Barcode Lookup -->
+      <div>
+        <button type="button" class="secondary-btn" id="barcodeModalBtn" title="Barkod No Gir">🏷️</button>
+        <div class="secondary-label">Barkod</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Sliding Result Bottom Sheet -->
+  <aside class="bottom-sheet" id="resultSheet">
+    <div class="sheet-handle-bar" id="sheetHandleBar">
+      <div class="sheet-handle"></div>
+    </div>
+    
+    <div class="sheet-content">
+      <!-- Product Hero Header -->
+      <div class="result-hero">
+        <img src="icon.png" alt="Ürün" class="product-thumb" id="sheetThumb" />
+        <div class="product-details">
+          <h2 class="product-name" id="sheetTitle">Ürün Adı</h2>
+          <div class="product-brand" id="sheetBrand">Marka Bilgisi</div>
+        </div>
+      </div>
+
+      <!-- Traffic Light Decision Banner -->
+      <div class="verdict-banner danger" id="verdictBanner">
+        <span id="verdictText">🔴 Sepete Atma! (Yüksek Risk)</span>
+        <span class="verdict-score" id="verdictScore">28/100</span>
+      </div>
+
+      <!-- Vücuttan Atılım Süresi Kartı (En Önemli Özellik!) -->
+      <div class="elimination-card">
+        <div class="card-header-flex">
+          <div class="card-title">
+            <span>⏱️</span> Vücuttan Temizlenme Süresi
+          </div>
+          <div class="elimination-badge" id="eliminationBadge">~72 Saat</div>
+        </div>
+        <div class="clearance-meter">
+          <div class="clearance-progress" id="clearanceBar" style="width: 75%; background: var(--amber);"></div>
+        </div>
+        <p class="clearance-desc" id="eliminationDesc">
+          İçerikteki hidrojenize yağlar ve kimyasal koruyucular karaciğer detoksifikasyon enzimlerini meşgul eder. Tamamen metabolize edilip böbrekler ve safra yoluyla atılması yaklaşık 3 gün sürer.
+        </p>
+      </div>
+
+      <!-- Tetiklediği Hastalıklar & Riskler -->
+      <div class="risk-section">
+        <div class="risk-section-title">
+          <span>⚠️</span> Tetikleyebileceği Metabolik Riskler
+        </div>
+        <div class="risk-grid" id="riskGrid">
+          <!-- Dynamic Risk Items -->
+        </div>
+      </div>
+
+      <!-- Tespit Edilen Katkı Maddeleri (E-Kodları) -->
+      <div class="risk-section">
+        <div class="risk-section-title">
+          <span>🔬</span> İçerik ve Katkı Maddesi Analizi
+        </div>
+        <div class="additives-tag-cloud" id="additivesCloud">
+          <!-- Dynamic Additive Tags -->
+        </div>
+      </div>
+
+      <!-- Temiz Alternatif Önerisi -->
+      <div class="alt-card" id="altCard">
+        <div class="alt-title">
+          <span>💡</span> Intus Sağlıklı Alternatif Tavsiyesi
+        </div>
+        <p class="alt-text" id="altText">
+          Bunun yerine %100 fındık içeren, ilave palm yağı ve rafine şeker barındırmayan doğal fındık ezmelerini tercih edebilirsiniz.
+        </p>
+      </div>
+
+      <!-- Bottom Close / Rescan Button -->
+      <div class="sheet-actions">
+        <button type="button" class="sheet-btn primary" id="closeSheetBtn">
+          <span>📸 Yeni Ürün Tara</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- Manual Barcode & Text Input Modal -->
+<div class="modal-overlay" id="inputModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modalTitle">🏷️ Barkod Numarası veya İçerik Girin</h3>
+      <button type="button" class="modal-close" id="closeModalBtn">&times;</button>
+    </div>
+    <input type="text" class="modal-input" id="barcodeInput" placeholder="ör. 3017620422003 veya 869..." />
+    <div style="font-size:12px; color:var(--text-faint); margin-bottom:12px;">veya paketteki "İçindekiler" yazısını yapıştırın:</div>
+    <textarea class="modal-input" id="ingredientsTextInput" placeholder="ör. Şeker, palm yağı, fındık (%13), yağsız süt tozu, kakao, emülgatör (soya lesitini)..."></textarea>
+    <button type="button" class="modal-btn" id="submitModalBtn">Analiz Et</button>
+  </div>
+</div>
+
+<!-- Loading Analysis Spinner -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Ürün Taranıyor…</div>
+  <div class="loading-subtext">Biyokimyasal içerik ve atılım süresi hesaplanıyor</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+
+  // UI Elements
+  const resultSheet = $('resultSheet');
+  const sheetThumb = $('sheetThumb'), sheetTitle = $('sheetTitle'), sheetBrand = $('sheetBrand');
+  const verdictBanner = $('verdictBanner'), verdictText = $('verdictText'), verdictScore = $('verdictScore');
+  const eliminationBadge = $('eliminationBadge'), eliminationDesc = $('eliminationDesc'), clearanceBar = $('clearanceBar');
+  const riskGrid = $('riskGrid'), additivesCloud = $('additivesCloud'), altText = $('altText');
+  const closeSheetBtn = $('closeSheetBtn'), triggerScanBtn = $('triggerScanBtn');
+  const galleryInput = $('galleryInput'), flipCameraBtn = $('flipCameraBtn');
+  const barcodeModalBtn = $('barcodeModalBtn'), manualInputBtn = $('manualInputBtn');
+  const inputModal = $('inputModal'), closeModalBtn = $('closeModalBtn'), submitModalBtn = $('submitModalBtn');
+  const barcodeInput = $('barcodeInput'), ingredientsTextInput = $('ingredientsTextInput');
+  const loadingOverlay = $('loadingOverlay'), loadingText = $('loadingText');
+  const toast = $('toast'), scanFrame = $('scanFrame');
+
+  let html5QrCode = null;
+  let currentFacingMode = "environment"; // Back camera by default
+  let isScanning = false;
+  let lastScannedCode = null;
+  let scanCooldown = false;
+
+  function showToast(msg) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  function showLoading(title) {
+    loadingText.textContent = title || 'Ürün Taranıyor…';
+    loadingOverlay.classList.add('show');
+  }
+  function hideLoading() {
+    loadingOverlay.classList.remove('show');
+  }
+
+  /* INTUS BIOCHEMICAL & HEALTH DATABASE ENGINE */
+  const ADDITIVES_DB = {
+    // E600s: Flavor enhancers
+    'e621': { name: 'Monosodyum Glutamat (MSG)', risk: 'danger', elimination: '6-12 Saat', hazard: 'Eksitotoksin / Nörolojik uyarıcı, açlık hissini körükleme, baş ağrısı' },
+    'e627': { name: 'Disodyum Guanilat', risk: 'caution', elimination: '12-24 Saat', hazard: 'Ürik asit artışı, gut hassasiyeti' },
+    'e631': { name: 'Disodyum İnosinat', risk: 'caution', elimination: '12-24 Saat', hazard: 'Metabolik sindirim yükü, alerjik reaksiyon' },
+    // Preservatives
+    'e250': { name: 'Sodyum Nitrit', risk: 'danger', elimination: '24-48 Saat', hazard: 'Midede kanserojen nitrozamin oluşumu, damar endotel hasarı' },
+    'e251': { name: 'Sodyum Nitrat', risk: 'danger', elimination: '24-48 Saat', hazard: 'Hücresel oksidatif stres, bağırsak iltihabı' },
+    'e211': { name: 'Sodyum Benzoat', risk: 'danger', elimination: '24-36 Saat', hazard: 'C vitamini ile birleştiğinde benzen riski, karaciğer yükü' },
+    'e202': { name: 'Potasyum Sorbat', risk: 'caution', elimination: '12-24 Saat', hazard: 'Cilt ve mukoza hassasiyeti, alerji tetikleme' },
+    'e220': { name: 'Kükürt Dioksit', risk: 'danger', elimination: '24-48 Saat', hazard: 'Astım atakları, B1 vitamini yıkımı, migren' },
+    // Dyes & Nanoparticles
+    'e171': { name: 'Titanyum Dioksit', risk: 'danger', elimination: 'Aylar (Dokularda Birikim)', hazard: 'DNA hasarı riski (AB tarafından gıdada yasaklanmıştır)' },
+    'e102': { name: 'Tartrazin', risk: 'danger', elimination: '24-48 Saat', hazard: 'Çocuklarda hiperaktivite, astım ve ürtiker' },
+    'e110': { name: 'Sunset Yellow', risk: 'danger', elimination: '24-48 Saat', hazard: 'Alerjik reaksiyonlar, dikkat dağınıklığı' },
+    'e129': { name: 'Allura Red', risk: 'danger', elimination: '24-48 Saat', hazard: 'Bağırsak mikrobiyota dengesini bozma, iltihap' },
+    'e133': { name: 'Brilliant Blue', risk: 'caution', elimination: '24 Saat', hazard: 'Böbrek filtrasyon yükü, alerjik duyarlılık' },
+    // Sweeteners
+    'e951': { name: 'Aspartam', risk: 'danger', elimination: '24-48 Saat', hazard: 'Bağırsak mikrobiyotası hasarı, glukoz tolerans bozukluğu, fenilalanin yükü' },
+    'e950': { name: 'Asesülfam K', risk: 'caution', elimination: '24 Saat', hazard: 'Tiroid fonksiyonlarını etkileme şüphesi' },
+    'e955': { name: 'Sukraloz', risk: 'danger', elimination: '48-72 Saat', hazard: 'Yararlı bağırsak bakterilerini %50 oranında azaltma riski' },
+    // Emulsifiers
+    'e471': { name: 'Mono ve Digliseritler', risk: 'caution', elimination: '1-3 Gün', hazard: 'Geçirgen bağırsak sendromu, kronik düşük dereceli inflamasyon' },
+    'e407': { name: 'Karagenan', risk: 'danger', elimination: '2-4 Gün', hazard: 'Mide-bağırsak ülserasyonu ve hücresel iltihaplanma' },
+    'e466': { name: 'Karboksimetil Selüloz', risk: 'caution', elimination: '1-2 Gün', hazard: 'Mukozal bariyer zayıflaması, metabolik sendrom riski' },
+    // Acids & Natural
+    'e330': { name: 'Sitrik Asit', risk: 'clean', elimination: 'Hızlı (4-8 Saat)', hazard: 'Genelde güvenli; diş minesi erozyonuna dikkat edilmeli' },
+    'e300': { name: 'Askorbik Asit (C Vitamini)', risk: 'clean', elimination: 'Hızlı (4-6 Saat)', hazard: 'Doğal antioksidan, güvenli' },
+    'e322': { name: 'Lesitin', risk: 'clean', elimination: 'Doğal Emilim', hazard: 'Hücre zarı için doğal fosfolipid kaynağı' }
+  };
+
+  // Keyword Database for Non-E-Code Industrial Ingredients
+  const INGREDIENT_KEYWORDS = [
+    { key: /palm ya[gğ]ı|palmolein/i, name: 'Palm Yağı', risk: 'danger', elimination: '30-50 Gün (Hücre Zarı Doymamış Yağ Döngüsü)', hazard: 'Yüksek doymuş palmitik asit; damar tıkanıklığı ve karaciğer yağlanmasını tetikler.' },
+    { key: /hidrojenize|trans ya[gğ]/i, name: 'Hidrojenize Trans Yağ', risk: 'danger', elimination: '51 Gün (Hücre zarı yarılanma ömrü)', hazard: 'LDL kötü kolesterolü artırır, damar sertliği ve kalp krizi riskini katlar.' },
+    { key: /glukoz.*fruktoz|fruktoz.*[sş]urubu|m[ıi]s[ıi]r [sş]urubu/i, name: 'Yüksek Fruktozlu Mısır Şurubu', risk: 'danger', elimination: '24-48 Saat (Karaciğerde Yağ Olarak Depolanır)', hazard: 'Doğrudan karaciğere yük bindirir; insülin direnci ve alkolsüz karaciğer yağlanması (NAFLD) yapar.' },
+    { key: /monosodyum glutamat|msg|lezzet art[ıi]r[ıi]c[ıi]/i, name: 'Monosodyum Glutamat (MSG)', risk: 'danger', elimination: '6-12 Saat', hazard: 'Tokluk mekanizmasını köreltir, beyinde aşırı yeme isteği uyandırır.' },
+    { key: /yapay aroma|do[gğ]ala [oö]zde[sş] aroma/i, name: 'Yapay Aroma Vericiler', risk: 'caution', elimination: '24 Saat', hazard: 'Tat reseptörlerini duyarsızlaştırır; gerçek gıdalardan alınan zevki azaltır.' },
+    { key: /sodyum benzoat/i, name: 'Sodyum Benzoat (E211)', risk: 'danger', elimination: '24 Saat', hazard: 'Karaciğer detoks yükünü artırır, alerjik reaksiyon tetikleyebilir.' },
+    { key: /titanyum dioksit/i, name: 'Titanyum Dioksit (E171)', risk: 'danger', elimination: 'Aylar (Dokularda Birikim)', hazard: 'Hücre çekirdeğine sızabilen nanopartikül; bağırsak mukozasında birikir.' },
+    { key: /so[gğ]uk s[ıi]k[ıi]m zeytinya[gğ][ıi]/i, name: 'Soğuk Sıkım Zeytinyağı', risk: 'clean', elimination: 'Faydalı Emilim', hazard: 'Yüksek polifenol ve oleik asit; kalp-damar ve beyin dostu sağlıklı yağ.' },
+    { key: /yulaf|lif|probiyotik/i, name: 'Doğal Lif & Probiyotik', risk: 'clean', elimination: 'Faydalı Bağırsak Besini', hazard: 'Bağırsak mikrobiyotasını besler, kan şekerini dengeler.' }
+  ];
+
+  /* DEMO PRODUCTS DATA */
+  const DEMO_PRODUCTS = {
+    'nutella': {
+      title: 'Kakaolu Fındık Kreması',
+      brand: 'Süpermarket Popüler Ürünü',
+      thumb: 'https://images.openfoodfacts.org/images/products/301/762/042/2003/front_tr.572.400.jpg',
+      score: 24,
+      verdict: 'danger',
+      verdictLabel: '🔴 Sepete Atma! (Aşırı Şeker & Palm Yağı)',
+      elimination: '14-28 Gün (Lipid Yükü)',
+      eliminationBar: 88,
+      eliminationDesc: 'Kavanozun %55\'i sofra şekeri, %30\'u palm yağından oluşur. Bu tip doymuş endüstriyel yağların hücre zarından temizlenmesi ve karaciğer üzerindeki yükü haftalar sürer.',
+      risks: [
+        { icon: '🩸', name: 'İnsülin Direnci & Tip 2 Diyabet', desc: '1 porsiyonu günlük şeker limitinin neredeyse tamamını doldurarak ani kan şekeri dalgalanması yaratır.' },
+        { icon: '🫀', name: 'Karaciğer Yağlanması (NAFLD)', desc: 'Yüksek fruktoz ve palm asidi karaciğerde depolanarak yağlı karaciğer oluşumunu hızlandırır.' },
+        { icon: '🧠', name: 'Aşırı Yeme & Dopamin Bağımlılığı', desc: 'Şeker-yağ kombinasyonu beyindeki ödül mekanizmasını uyararak bağımlılık yaratır.' }
+      ],
+      additives: [
+        { code: 'Palm Yağı', name: 'Rafine Bitkisel Yağ', risk: 'danger' },
+        { code: 'E322', name: 'Soya Lesitini', risk: 'clean' },
+        { code: 'Vanilin', name: 'Sentetik Aroma', risk: 'caution' },
+        { code: '%55 Şeker', name: 'Sofra Şekeri', risk: 'danger' }
+      ],
+      alt: 'Bunun yerine %100 kavrulmuş fındık içeren, ilave palm yağı ve rafine şeker içermeyen katkısız fındık ezmelerini tercih edebilirsiniz.'
+    },
+    'chips': {
+      title: 'Baharatlı Patates Cipsi',
+      brand: 'Aperatif Atıştırmalık',
+      thumb: 'https://images.openfoodfacts.org/images/products/869/062/410/0107/front_tr.10.400.jpg',
+      score: 22,
+      verdict: 'danger',
+      verdictLabel: '🔴 Sepete Atma! (MSG & Akrilamid)',
+      elimination: '3-5 Gün',
+      eliminationBar: 82,
+      eliminationDesc: 'İçerikteki MSG (Çin tuzu) sinir iletilerini manipüle eder. Yüksek ısıyla kızartılmış nişastadan doğan akrilamid bileşikleri böbrek ve karaciğerde temizlenme süresini 5 güne uzatır.',
+      risks: [
+        { icon: '⚡', name: 'Eksitotoksisite & Aşırı İştah', desc: 'E621 (MSG) beyne sahte protein sinyali göndererek paketin tamamını bitirene kadar doymama hissi verir.' },
+        { icon: '🩺', name: 'Tansiyon & Damar Basıncı', desc: 'Yüksek sodyum ve hidrolize protein karışımı kan basıncını aniden yükseltir.' },
+        { icon: '🔥', name: 'Kronik Hücresel İnflamasyon', desc: 'Defalarca kızartılmış yağlar vücutta hücresel iltihabı ve oksidatif stresi tetikler.' }
+      ],
+      additives: [
+        { code: 'E621', name: 'Monosodyum Glutamat', risk: 'danger' },
+        { code: 'E627', name: 'Disodyum Guanilat', risk: 'caution' },
+        { code: 'E631', name: 'Disodyum İnosinat', risk: 'caution' },
+        { code: 'Palm Yağı', name: 'Kızartma Yağı', risk: 'danger' },
+        { code: 'E160c', name: 'Paprika Ekstratı', risk: 'clean' }
+      ],
+      alt: 'Bunun yerine fırınlanmış nohut cipsi veya evde zeytinyağı ve kekikle fırınlanmış patates dilimlerini tercih edin.'
+    },
+    'energy': {
+      title: 'Gazlı Enerji İçeceği',
+      brand: 'Yüksek Kafeinli İçecek',
+      thumb: 'https://images.openfoodfacts.org/images/products/900/249/010/0070/front_tr.12.400.jpg',
+      score: 18,
+      verdict: 'danger',
+      verdictLabel: '🔴 Sepete Atma! (Kalp & Mikrobiyota Riski)',
+      elimination: '24-48 Saat',
+      eliminationBar: 75,
+      eliminationDesc: 'Yüksek doz sentetik kafein ve taurin karışımı vücuttan 24 saatte atılır; ancak yapay tatlandırıcılar bağırsak florasında günlerce hasar bırakır.',
+      risks: [
+        { icon: '🫀', name: 'Taşikardi & Kalp Ritim Düzensizliği', desc: 'Yüksek serbest kafein ve taurin sinerjisi kalp kası üzerinde ani baskı kurar.' },
+        { icon: '🦠', name: 'Bağırsak Florası Tahribatı', desc: 'Yapay tatlandırıcılar bağırsaktaki faydalı bakterileri azaltarak sindirim sorunlarına yol açar.' },
+        { icon: '🦷', name: 'Diş Minesi Erozyonu', desc: 'pH 2.8 seviyesindeki sitrik asit diş minesini doğrudan yumuşatır.' }
+      ],
+      additives: [
+        { code: 'E330', name: 'Sitrik Asit', risk: 'clean' },
+        { code: 'Taurin', name: 'Sentetik Taurin', risk: 'caution' },
+        { code: 'E955', name: 'Sukraloz', risk: 'danger' },
+        { code: 'E150d', name: 'Karamel IV', risk: 'danger' }
+      ],
+      alt: 'Bunun yerine soğuk demlenmiş sade filtre kahve, matcha veya maden suyu ile taze limon karışımı için.'
+    },
+    'oliveoil': {
+      title: 'Erken Hasat Soğuk Sıkım Zeytinyağı',
+      brand: 'Doğal Ege Ürünü',
+      thumb: 'https://images.openfoodfacts.org/images/products/869/056/500/1013/front_tr.4.400.jpg',
+      score: 96,
+      verdict: 'clean',
+      verdictLabel: '🟢 Gönül Rahatlığıyla Alın! (Şifa Deposu)',
+      elimination: 'Hücreleri Besler (Doğal)',
+      eliminationBar: 15,
+      eliminationDesc: 'Hiçbir kimyasal işlem, solvent veya koruyucu içermez. Yüksek oleik asit ve E vitamini hücre zarlarını onarır; vücutta toksik yük bırakmaz.',
+      risks: [
+        { icon: '✨', name: 'Antioksidan & Hücre Yenilenmesi', desc: 'Zengin polifenoller damar endotelini korur, serbest radikalleri nötralize eder.' },
+        { icon: '🛡️', name: 'Kalp-Damar Koruması', desc: 'HDL iyi kolesterolü destekler, damar plak oluşumunu önler.' }
+      ],
+      additives: [
+        { code: '%100 Zeytinyağı', name: 'Saf Soğuk Sıkım', risk: 'clean' }
+      ],
+      alt: 'Mükemmel seçim! Yemeklerinizde ve salatalarınızda ana yağ kaynağı olarak güvenle kullanabilirsiniz.'
+    },
+    'babyoats': {
+      title: 'Organik Katkısız Bebek Yulafı',
+      brand: 'Doğal Tahıl',
+      thumb: 'https://images.openfoodfacts.org/images/products/869/941/371/0014/front_tr.15.400.jpg',
+      score: 92,
+      verdict: 'clean',
+      verdictLabel: '🟢 Temiz & Güvenli İçerik',
+      elimination: 'Sindirim Dostu (Kolay Atılım)',
+      eliminationBar: 18,
+      eliminationDesc: 'İçerisinde koruyucu, ilave şeker, yapay tatlandırıcı veya renklendirici yoktur. Beta-glukan lifleri bağırsak florasını güçlendirir.',
+      risks: [
+        { icon: '🌾', name: 'Kan Şekeri Dengesi', desc: 'Çözünür lifler mide boşalmasını yavaşlatarak tokluk hissi sağlar ve insülini dengeler.' },
+        { icon: '🦠', name: 'Prebiyotik Bağırsak Desteği', desc: 'Faydalı bağırsak bakterilerini besler.' }
+      ],
+      additives: [
+        { code: '%100 Yulaf', name: 'Gluteni Azaltılmış Doğal Yulaf', risk: 'clean' }
+      ],
+      alt: 'Bebekler ve yetişkinler için mükemmel bir kahvaltı ve ara öğün bazıdır.'
+    },
+    'yogurt': {
+      title: 'Doğal Probiyotik Maya Yoğurt',
+      brand: 'Geleneksel Süt Ürünü',
+      thumb: 'https://images.openfoodfacts.org/images/products/869/056/502/0021/front_tr.6.400.jpg',
+      score: 88,
+      verdict: 'clean',
+      verdictLabel: '🟢 Temiz İçerik (Bağırsak Dostu)',
+      elimination: 'Hızlı & Şifalı Emilim',
+      eliminationBar: 20,
+      eliminationDesc: 'Canlı laktobasil mayaları içerir. Laktoz parçalandığı için sindirimi son derece kolaydır.',
+      risks: [
+        { icon: '🥛', name: 'Kemik & Kas Desteği', desc: 'Biyoaktif kalsiyum ve yüksek kaliteli protein kaynağıdır.' },
+        { icon: '🛡️', name: 'Bağışıklık Kalkanı', desc: 'Bağırsak duvarındaki antikor üretimini uyarır.' }
+      ],
+      additives: [
+        { code: 'Pastörize Süt', name: 'Doğal İnek Sütü', risk: 'clean' },
+        { code: 'Probiyotik Maya', name: 'L. Acidophilus & Bifidobacterium', risk: 'clean' }
+      ],
+      alt: 'Her gün 1 kase tüketerek sindirim sisteminizi ve bağışıklığınızı destekleyebilirsiniz.'
+    }
+  };
+
+  /* ANALYZE INGREDIENT TEXT OR OPENFOODFACTS OBJECT */
+  function analyzeProduct(data) {
+    const rawIngs = (data.ingredients_text || data.raw_text || '').toLowerCase();
+    const detectedAdditives = [];
+    const detectedRisks = [];
+    let dangerScore = 0; // 0 = clean, higher = worse
+    let maxElimination = '24-48 Saat';
+    let eliminationDescText = '';
+
+    // 1. Scan for E-codes
+    const eCodeMatches = rawIngs.match(/e\s?([0-9]{3,4}[a-z]?)/gi) || [];
+    const uniqueECodes = [...new Set(eCodeMatches.map(e => e.replace(/\s+/g, '').toLowerCase()))];
+
+    uniqueECodes.forEach(code => {
+      const info = ADDITIVES_DB[code];
+      if (info) {
+        detectedAdditives.push({ code: code.toUpperCase(), name: info.name, risk: info.risk });
+        if (info.risk === 'danger') {
+          dangerScore += 25;
+          detectedRisks.push({ icon: '⚠️', name: info.name, desc: info.hazard });
+          maxElimination = info.elimination;
+        } else if (info.risk === 'caution') {
+          dangerScore += 12;
+          detectedRisks.push({ icon: '⚡', name: info.name, desc: info.hazard });
+        }
+      } else {
+        detectedAdditives.push({ code: code.toUpperCase(), name: 'Gıda Katkı Maddesi', risk: 'caution' });
+        dangerScore += 10;
+      }
+    });
+
+    // 2. Scan for Non-E-Code Industrial ingredients (palm oil, trans fat, glucose syrup, MSG)
+    INGREDIENT_KEYWORDS.forEach(item => {
+      if (item.key.test(rawIngs)) {
+        if (!detectedAdditives.some(a => a.name.includes(item.name))) {
+          detectedAdditives.push({ code: item.name, name: item.name, risk: item.risk });
+        }
+        if (item.risk === 'danger') {
+          dangerScore += 28;
+          detectedRisks.push({ icon: '⚠️', name: item.name, desc: item.hazard });
+          maxElimination = item.elimination;
+        } else if (item.risk === 'clean') {
+          detectedRisks.push({ icon: '✨', name: item.name, desc: item.hazard });
+        }
+      }
+    });
+
+    // 3. Score Normalization (0-100 where 100 is cleanest)
+    let healthScore = Math.max(12, Math.min(98, 100 - dangerScore));
+    let verdict = 'clean';
+    let verdictLabel = '🟢 Temiz & Güvenli İçerik';
+
+    if (healthScore < 45) {
+      verdict = 'danger';
+      verdictLabel = '🔴 Sepete Atma! (Yüksek Risk)';
+    } else if (healthScore < 75) {
+      verdict = 'caution';
+      verdictLabel = '🟡 Dikkatli Tüket (Haftada 1-2 Porsiyon)';
+    }
+
+    if (!detectedRisks.length) {
+      detectedRisks.push({
+        icon: '✅',
+        name: 'Belirgin Toksik Katkı Bulunamadı',
+        desc: 'Ürünün etiketinde zararlı koruyucu, yapay tatlandırıcı veya hidrojene yağ tespit edilmedi.'
+      });
+    }
+
+    if (!detectedAdditives.length) {
+      detectedAdditives.push({ code: 'Temiz', name: 'İlave Katkı Maddesi Yok', risk: 'clean' });
+    }
+
+    if (!eliminationDescText) {
+      eliminationDescText = verdict === 'danger'
+        ? `İçerikteki kimyasal koruyucular ve endüstriyel yağlar karaciğer ve böbrek filtrasyonunu meşgul eder. Vücuttan tamamen atılması yaklaşık ${maxElimination} sürer.`
+        : (verdict === 'caution'
+          ? `Orta düzey metabolik yük oluşturur. Bol su tüketimiyle yaklaşık ${maxElimination} içinde atılır.`
+          : 'Doğal içerikler vücudun doğal sindirim sürecinde toksik yük oluşturmadan kolayca metabolize edilir.');
+    }
+
+    return {
+      title: data.product_name || data.product_name_tr || 'Taranan Ürün',
+      brand: data.brands || 'Market Ürünü',
+      thumb: data.image_front_url || data.image_url || 'icon.png',
+      score: healthScore,
+      verdict,
+      verdictLabel,
+      elimination: maxElimination,
+      eliminationBar: 100 - healthScore,
+      eliminationDesc: eliminationDescText,
+      risks: detectedRisks.slice(0, 4),
+      additives: detectedAdditives,
+      alt: verdict === 'danger'
+        ? 'Bu ürün yerine aynı kategorideki organik, katkısız ve ilave palm yağı / rafine şeker içermeyen alternatifleri tercih edin.'
+        : (verdict === 'caution' ? 'Tüketim miktarını sınırlı tutarak ara sıra tüketebilirsiniz.' : 'Mükemmel seçim! Gönül rahatlığıyla sepetinize ekleyebilirsiniz.')
+    };
+  }
+
+  /* RENDER RESULT SHEET */
+  function displayResult(result) {
+    sheetTitle.textContent = result.title;
+    sheetBrand.textContent = result.brand;
+    sheetThumb.src = result.thumb || 'icon.png';
+
+    // Traffic light banner
+    verdictBanner.className = 'verdict-banner ' + result.verdict;
+    verdictText.textContent = result.verdictLabel;
+    verdictScore.textContent = result.score + '/100';
+
+    // Elimination timeline
+    eliminationBadge.textContent = result.elimination;
+    eliminationBadge.className = 'elimination-badge ' + (result.verdict === 'clean' ? 'fast' : (result.verdict === 'danger' ? 'slow' : ''));
+    clearanceBar.style.width = Math.min(100, Math.max(15, result.eliminationBar)) + '%';
+    clearanceBar.style.background = result.verdict === 'clean' ? 'var(--emerald)' : (result.verdict === 'caution' ? 'var(--amber)' : 'var(--crimson)');
+    eliminationDesc.textContent = result.eliminationDesc;
+
+    // Risks
+    riskGrid.innerHTML = '';
+    result.risks.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'risk-item';
+      item.innerHTML = `
+        <span class="risk-icon">${r.icon}</span>
+        <div>
+          <div class="risk-text-name">${r.name}</div>
+          <div class="risk-text-desc">${r.desc}</div>
+        </div>
+      `;
+      riskGrid.appendChild(item);
+    });
+
+    // Additives
+    additivesCloud.innerHTML = '';
+    result.additives.forEach(a => {
+      const tag = document.createElement('span');
+      tag.className = 'additive-pill ' + a.risk;
+      tag.textContent = (a.code !== a.name ? a.code + ' — ' : '') + a.name;
+      additivesCloud.appendChild(tag);
+    });
+
+    // Alt
+    altText.textContent = result.alt;
+
+    // Open sheet
+    resultSheet.classList.add('open');
+
+    // Haptic feedback
+    if (navigator.vibrate) {
+      navigator.vibrate(result.verdict === 'clean' ? [60] : [100, 50, 100]);
+    }
+  }
+
+  // Quick Demo Runner
+  window.runDemo = function(key) {
+    if (DEMO_PRODUCTS[key]) {
+      showLoading('Hazır ürün taranıyor…');
+      setTimeout(() => {
+        hideLoading();
+        displayResult(DEMO_PRODUCTS[key]);
+        showToast('✓ ' + DEMO_PRODUCTS[key].title + ' analiz edildi!');
+      }, 500);
+    }
+  };
+
+  /* FETCH PRODUCT BY BARCODE FROM OPEN FOOD FACTS API */
+  async function fetchBarcodeFromAPI(barcode) {
+    showLoading('Barkod sorgulanıyor (' + barcode + ')…');
+    try {
+      const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
+      if (!res.ok) throw new Error('Ürün sorgulanamadı: ' + res.status);
+      const json = await res.json();
+
+      hideLoading();
+      if (json.status === 1 && json.product) {
+        const analyzed = analyzeProduct(json.product);
+        displayResult(analyzed);
+        showToast('✓ Ürün veritabanında bulundu!');
+      } else {
+        // Fallback demo matching common sample codes or prompt
+        showToast('Barkod veritabanında yok. İçindekiler metnini girin.');
+        openManualModalWithBarcode(barcode);
+      }
+    } catch(err) {
+      hideLoading();
+      console.warn('OpenFoodFacts API error:', err);
+      showToast('İnternet bağlantısını kontrol edin veya elle girin.');
+      openManualModalWithBarcode(barcode);
+    }
+  }
+
+  function openManualModalWithBarcode(barcode) {
+    barcodeInput.value = barcode || '';
+    ingredientsTextInput.value = '';
+    inputModal.classList.add('show');
+  }
+
+  /* BARCODE DETECTION HANDLER */
+  function onBarcodeDetected(decodedText) {
+    if (scanCooldown) return;
+    scanCooldown = true;
+    lastScannedCode = decodedText.trim();
+    
+    // Animate scan frame on hit
+    scanFrame.style.borderColor = 'var(--amber)';
+    setTimeout(() => { scanFrame.style.borderColor = ''; }, 600);
+
+    fetchBarcodeFromAPI(lastScannedCode);
+    setTimeout(() => { scanCooldown = false; }, 3500);
+  }
+
+  /* INITIALIZE HTML5-QRCODE / BARCODE SCANNER */
+  function initScanner() {
+    if (typeof Html5Qrcode === 'undefined') {
+      console.warn('Html5Qrcode not loaded yet.');
+      return;
+    }
+
+    try {
+      html5QrCode = new Html5Qrcode("scannerReader");
+      const config = {
+        fps: 15,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+      };
+
+      html5QrCode.start(
+        { facingMode: currentFacingMode },
+        config,
+        (decodedText) => {
+          onBarcodeDetected(decodedText);
+        },
+        () => {
+          // ignore scan frame misses
+        }
+      ).then(() => {
+        isScanning = true;
+      }).catch(err => {
+        console.warn('Camera stream could not start (likely permissions or desktop browser):', err);
+        // If camera fails, user can still use gallery, demo, or manual barcode
+      });
+    } catch(e) {
+      console.warn('Scanner init error:', e);
+    }
+  }
+
+  // Camera flip button
+  flipCameraBtn.addEventListener('click', () => {
+    if (!html5QrCode || !isScanning) return;
+    currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+    html5QrCode.stop().then(() => {
+      initScanner();
+      showToast('Kamera değiştirildi.');
+    }).catch(() => {
+      initScanner();
+    });
+  });
+
+  // Big Single Trigger Button -> Focus / Manual Trigger
+  triggerScanBtn.addEventListener('click', () => {
+    // Pulse animation
+    triggerScanBtn.style.transform = 'scale(0.9)';
+    setTimeout(() => { triggerScanBtn.style.transform = ''; }, 180);
+
+    // If result sheet is open, close it; otherwise run instant demo or scan
+    if (resultSheet.classList.contains('open')) {
+      resultSheet.classList.remove('open');
+    } else {
+      showToast('🔍 Barkodu çerçeveye ortalayın veya yukarıdaki örnek ürünleri seçin.');
+    }
+  });
+
+  // Gallery Image Upload -> Read barcode or prompt analysis
+  galleryInput.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    showLoading('Fotoğraf taranıyor…');
+    if (html5QrCode) {
+      html5QrCode.scanFile(file, true)
+        .then(decodedText => {
+          hideLoading();
+          onBarcodeDetected(decodedText);
+        })
+        .catch(err => {
+          hideLoading();
+          // If no barcode detected in photo, ask user for ingredients or analyze demo
+          showToast('Barkod bulunamadı. İçindekiler metnini analiz edelim.');
+          inputModal.classList.add('show');
+        });
+    } else {
+      hideLoading();
+      inputModal.classList.add('show');
+    }
+  });
+
+  // Manual Modal Open / Close
+  function closeModal() { inputModal.classList.remove('show'); }
+  manualInputBtn.addEventListener('click', () => { inputModal.classList.add('show'); });
+  barcodeModalBtn.addEventListener('click', () => { inputModal.classList.add('show'); });
+  closeModalBtn.addEventListener('click', closeModal);
+
+  submitModalBtn.addEventListener('click', () => {
+    const code = barcodeInput.value.trim();
+    const rawText = ingredientsTextInput.value.trim();
+
+    closeModal();
+    if (code) {
+      fetchBarcodeFromAPI(code);
+    } else if (rawText) {
+      showLoading('İçindekiler tahlil ediliyor…');
+      setTimeout(() => {
+        hideLoading();
+        const analyzed = analyzeProduct({
+          product_name: 'Özel Analiz Ürünü',
+          brands: 'Etiket Girişi',
+          raw_text: rawText
+        });
+        displayResult(analyzed);
+        showToast('✓ İçerik analizi tamamlandı!');
+      }, 500);
+    } else {
+      showToast('Lütfen bir barkod numarası veya içerik metni girin.');
+    }
+  });
+
+  // Bottom Sheet Controls
+  closeSheetBtn.addEventListener('click', () => {
+    resultSheet.classList.remove('open');
+  });
+
+  // Slide down on handle drag
+  let startY = 0;
+  $('sheetHandleBar').addEventListener('touchstart', (e) => {
+    startY = e.touches[0].clientY;
+  });
+  $('sheetHandleBar').addEventListener('touchmove', (e) => {
+    const currentY = e.touches[0].clientY;
+    if (currentY - startY > 60) {
+      resultSheet.classList.remove('open');
+    }
+  });
+
+  // Initialize camera when page is ready
+  window.addEventListener('load', () => {
+    setTimeout(initScanner, 400);
+  });
+})();
+</script>
+</body>
+</html>
