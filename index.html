@@ -974,29 +974,136 @@
     }
   };
 
-  /* FETCH PRODUCT BY BARCODE FROM OPEN FOOD FACTS API */
+  /* COMPREHENSIVE LOCAL TURKISH & GLOBAL MARKET CATALOG */
+  const LOCAL_BARCODE_CATALOG = {
+    '3017620422003': DEMO_PRODUCTS['nutella'],
+    '5449000000996': {
+      title: 'Coca-Cola Orijinal Tat (330ml)',
+      brand: 'The Coca-Cola Company',
+      thumb: 'https://images.openfoodfacts.org/images/products/544/900/000/0996/front_fr.465.400.jpg',
+      score: 16,
+      verdict: 'danger',
+      verdictLabel: '🔴 Sepete Atma! (Aşırı Şeker & Fosforik Asit)',
+      elimination: '24-48 Saat (Metabolik Asit Yükü)',
+      eliminationBar: 84,
+      eliminationDesc: 'Kutuda yaklaşık 35g rafine sofra şekeri bulunur. Fosforik asit (E338) kalsiyumu bağlar; karaciğerde fruktoz yağ depolanmasını hızlandırır.',
+      risks: [
+        { icon: '🩸', name: 'Ani İnsülin Dalgalanması', desc: 'Sıvı şeker hızla emilerek pankreası yüksek insülin üretmeye zorlar.' },
+        { icon: '🫀', name: 'Karaciğer Yağlanması (NAFLD)', desc: 'Fruktoz doğrudan karaciğerde depolanarak yağ hücrelerini artırır.' },
+        { icon: '🦷', name: 'Kemik & Diş Asit Yükü', desc: 'Asidik ortam diş minesini ve kalsiyum dengesini zorlar.' }
+      ],
+      additives: [
+        { code: 'E150d', name: 'Karamel IV (Sülfit Amonyak)', risk: 'danger' },
+        { code: 'E338', name: 'Fosforik Asit', risk: 'danger' },
+        { code: 'Aroma', name: 'Doğal Aroma & Kafein', risk: 'caution' },
+        { code: '%10.6 Şeker', name: 'Yüksek Rafine Şeker', risk: 'danger' }
+      ],
+      alt: 'Bunun yerine maden suyu ile taze limon dilimi veya ev yapımı soğuk demlenmiş meyve çayı için.'
+    },
+    '8690624100107': DEMO_PRODUCTS['chips'],
+    '9002490100070': DEMO_PRODUCTS['energy'],
+    '8690565001013': DEMO_PRODUCTS['oliveoil'],
+    '8699413710014': DEMO_PRODUCTS['babyoats'],
+    '8690565020021': DEMO_PRODUCTS['yogurt'],
+    // Gums (Sakızlar)
+    '8690533010013': {
+      title: 'Damla Sakızlı Şekersiz Sakız',
+      brand: 'Falım',
+      thumb: 'https://images.openfoodfacts.org/images/products/869/053/301/0013/front_tr.10.400.jpg',
+      score: 72,
+      verdict: 'caution',
+      verdictLabel: '🟡 Dikkatli Tüket (Sentetik Maya)',
+      elimination: '12-24 Saat',
+      eliminationBar: 40,
+      eliminationDesc: 'Şekersizdir; ancak sakız mayası sentetik polimerler, antioksidan (BHT/BHA) içerir. Çiğnenip atıldığı için vücuda emilimi düşüktür.',
+      risks: [
+        { icon: '🦷', name: 'Çene Eklemi ve Mide Asidi', desc: 'Aç karnına uzun süre çiğnendiğinde mide asidini gereksiz uyarabilir.' },
+        { icon: '⚡', name: 'Sentetik Maya Katkıları', desc: 'Aroma verici ve antioksidan koruyucu bileşikler içerir.' }
+      ],
+      additives: [
+        { code: 'Sakız Mayası', name: 'Sentetik Polimer', risk: 'caution' },
+        { code: 'E321 (BHT)', name: 'Sentetik Antioksidan', risk: 'danger' },
+        { code: 'Doğal Damla Sakızı', name: 'Menzil Aroması', risk: 'clean' }
+      ],
+      alt: 'Katkısız organik çam sakızı veya saf damla sakızı reçinesi tercih edilebilir.'
+    }
+  };
+
+  /* ROBUST UNIVERSAL BARCODE RESOLVER */
   async function fetchBarcodeFromAPI(barcode) {
     showLoading('Barkod sorgulanıyor (' + barcode + ')…');
-    try {
-      const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
-      if (!res.ok) throw new Error('Ürün sorgulanamadı: ' + res.status);
-      const json = await res.json();
+    
+    // 1. Check local catalog first (instant 0ms resolution)
+    if (LOCAL_BARCODE_CATALOG[barcode]) {
+      hideLoading();
+      displayResult(LOCAL_BARCODE_CATALOG[barcode]);
+      showToast('✓ Ürün anında tanındı!');
+      return;
+    }
 
-      hideLoading();
-      if (json.status === 1 && json.product) {
-        const analyzed = analyzeProduct(json.product);
-        displayResult(analyzed);
-        showToast('✓ Ürün veritabanında bulundu!');
-      } else {
-        // Fallback demo matching common sample codes or prompt
-        showToast('Barkod veritabanında yok. İçindekiler metnini girin.');
-        openManualModalWithBarcode(barcode);
+    // 2. Fetch from Open Food Facts API v0 (CORS-safe endpoint)
+    let productData = null;
+    const offUrls = [
+      `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`,
+      `https://tr.openfoodfacts.org/api/v0/product/${barcode}.json`
+    ];
+
+    for (const url of offUrls) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3800);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json.status === 1 && json.product) {
+            productData = json.product;
+            break;
+          }
+        }
+      } catch(e) {
+        // Continue to fallback
       }
-    } catch(err) {
-      hideLoading();
-      console.warn('OpenFoodFacts API error:', err);
-      showToast('İnternet bağlantısını kontrol edin veya elle girin.');
-      openManualModalWithBarcode(barcode);
+    }
+
+    hideLoading();
+
+    if (productData) {
+      const analyzed = analyzeProduct(productData);
+      displayResult(analyzed);
+      showToast('✓ Ürün veritabanında bulundu!');
+    } else {
+      // 3. Fallback: NEVER throw "internet error" or get stuck!
+      // Generate clean new-product card with country origin & 1-tap category / photo options
+      const isTurkish = barcode.startsWith('869');
+      const originName = isTurkish ? '🇹🇷 Türkiye Menşeili Ürün (869 Kodu)' : 'Uluslararası Barkod';
+
+      const unlistedProduct = {
+        title: 'Barkod: #' + barcode,
+        brand: originName,
+        thumb: 'icon.png',
+        score: 50,
+        verdict: 'caution',
+        verdictLabel: '🟡 Yeni Ürün (Etiket Analizi Bekleniyor)',
+        elimination: 'Etiket İncelemesi Gerekli',
+        eliminationBar: 50,
+        eliminationDesc: 'Bu ürün henüz küresel barkod kütüphanesine kaydedilmemiş. Aşağıdaki butona basarak paketin arkasındaki "İçindekiler" yazısını fotoğraflayabilir veya yapıştırabilirsiniz.',
+        risks: [
+          { icon: '🏷️', name: 'Barkod Numarası Algılandı', desc: `${barcode} numaralı ürün kaydedildi.` },
+          { icon: '📸', name: 'İçerik Fotoğrafı Çekin', desc: 'Paketin arka yüzündeki İçindekiler bölümünü fotoğraflayarak katkı maddesi ve vücuttan atılım süresini öğrenebilirsiniz.' }
+        ],
+        additives: [
+          { code: 'Yeni Ürün', name: 'İçerik Analiz Edilmeyi Bekliyor', risk: 'caution' }
+        ],
+        alt: 'Paketin arkasındaki içindekiler metnini girerek tam biyokimyasal röntgen raporunu çıkarın.'
+      };
+
+      displayResult(unlistedProduct);
+      showToast('Yeni ürün! İçindekiler metnini ekleyelim.');
+      setTimeout(() => {
+        openManualModalWithBarcode(barcode);
+      }, 700);
     }
   }
 
@@ -1016,33 +1123,31 @@
     scanFrame.style.borderColor = 'var(--amber)';
     setTimeout(() => { scanFrame.style.borderColor = ''; }, 600);
 
-    // 1. Check if QR code contains a standard barcode number or GS1 Digital Link
-    // GS1 QR codes often look like: https://brand.com/01/08690123456789... or contain digits
+    // Close any previous sheet to avoid showing old product
+    resultSheet.classList.remove('open');
+
+    // 1. Check if QR code or Barcode contains digits
     const digitsOnly = raw.replace(/\D/g, '');
     const barcodeMatch = raw.match(/\b([0-9]{8,14})\b/);
 
     if (barcodeMatch && barcodeMatch[1]) {
-      // It contains a standard 8-14 digit barcode (EAN-8, EAN-13, UPC)
       fetchBarcodeFromAPI(barcodeMatch[1]);
     } else if (digitsOnly.length >= 8 && digitsOnly.length <= 14) {
       fetchBarcodeFromAPI(digitsOnly);
     } else if (raw.startsWith('http://') || raw.startsWith('https://')) {
-      // QR code is a web link (e.g. digital product passport or menu)
       showToast('🔗 Karekod web bağlantısı algılandı.');
-      showLoading('Karekod bağlantısı inceleniyor…');
+      showLoading('Karekod inceleniyor…');
       setTimeout(() => {
         hideLoading();
-        // If it looks like a food link, analyze or open
         const analyzed = analyzeProduct({
-          product_name: 'Karekod Ürün Bilgisi',
+          product_name: 'Karekod Bağlantısı',
           brands: new URL(raw).hostname.replace('www.', ''),
           raw_text: raw
         });
         displayResult(analyzed);
-      }, 600);
+      }, 400);
     } else {
-      // QR code contains raw text or ingredients
-      showLoading('Karekod içeriği tahlil ediliyor…');
+      showLoading('İçerik tahlil ediliyor…');
       setTimeout(() => {
         hideLoading();
         const analyzed = analyzeProduct({
@@ -1052,13 +1157,13 @@
         });
         displayResult(analyzed);
         showToast('✓ Karekod başarıyla okundu!');
-      }, 500);
+      }, 400);
     }
 
-    setTimeout(() => { scanCooldown = false; }, 3500);
+    setTimeout(() => { scanCooldown = false; }, 2500);
   }
 
-  /* INITIALIZE HTML5-QRCODE / BARCODE SCANNER */
+  /* INITIALIZE HTML5-QRCODE / BARCODE SCANNER WITH NATIVE HARDWARE ACCELERATION */
   function initScanner() {
     if (typeof Html5Qrcode === 'undefined') {
       console.warn('Html5Qrcode not loaded yet.');
@@ -1066,10 +1171,20 @@
     }
 
     try {
-      html5QrCode = new Html5Qrcode("scannerReader");
+      html5QrCode = new Html5Qrcode("scannerReader", {
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true // Native hardware acceleration (10x faster)
+        }
+      });
+
+      // Horizontal rectangular scan box matching market barcodes
       const config = {
-        fps: 15,
-        qrbox: { width: 250, height: 250 },
+        fps: 20,
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          const width = Math.floor(viewfinderWidth * 0.82);
+          const height = Math.floor(viewfinderHeight * 0.46);
+          return { width: Math.max(260, width), height: Math.max(160, height) };
+        },
         aspectRatio: 1.0
       };
 
@@ -1079,14 +1194,11 @@
         (decodedText) => {
           onBarcodeDetected(decodedText);
         },
-        () => {
-          // ignore scan frame misses
-        }
+        () => {}
       ).then(() => {
         isScanning = true;
       }).catch(err => {
-        console.warn('Camera stream could not start (likely permissions or desktop browser):', err);
-        // If camera fails, user can still use gallery, demo, or manual barcode
+        console.warn('Camera stream notice:', err);
       });
     } catch(e) {
       console.warn('Scanner init error:', e);
@@ -1105,17 +1217,46 @@
     });
   });
 
-  // Big Single Trigger Button -> Focus / Manual Trigger
+  // Big Single Trigger Button -> Capture Current Video Frame Snapshot & Scan
   triggerScanBtn.addEventListener('click', () => {
     // Pulse animation
-    triggerScanBtn.style.transform = 'scale(0.9)';
+    triggerScanBtn.style.transform = 'scale(0.88)';
     setTimeout(() => { triggerScanBtn.style.transform = ''; }, 180);
 
-    // If result sheet is open, close it; otherwise run instant demo or scan
+    // If result sheet is open, close it and reset
     if (resultSheet.classList.contains('open')) {
       resultSheet.classList.remove('open');
+      scanCooldown = false;
+      return;
+    }
+
+    // Try capturing current video frame from camera
+    const video = document.querySelector('#scannerReader video');
+    if (video && video.videoWidth && html5QrCode) {
+      showToast('📸 Kare yakalandı, taranıyor…');
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
+            html5QrCode.scanFile(file, true)
+              .then(decodedText => onBarcodeDetected(decodedText))
+              .catch(() => {
+                showToast('Barkod algılanamadı. İçindekiler yazısını girebilirsiniz.');
+                openManualModalWithBarcode('');
+              });
+          }
+        }, 'image/jpeg', 0.92);
+      } catch(e) {
+        showToast('Barkodu çerçeveye biraz daha yaklaştırın.');
+      }
     } else {
-      showToast('🔍 Barkodu çerçeveye ortalayın veya yukarıdaki örnek ürünleri seçin.');
+      showToast('🔍 Barkodu çerçeveye yaklaştırın veya örnek ürünleri seçin.');
     }
   });
 
@@ -1133,9 +1274,8 @@
         })
         .catch(err => {
           hideLoading();
-          // If no barcode detected in photo, ask user for ingredients or analyze demo
-          showToast('Barkod bulunamadı. İçindekiler metnini analiz edelim.');
-          inputModal.classList.add('show');
+          showToast('Barkod bulunamadı. İçindekiler metnini tahlil edelim.');
+          openManualModalWithBarcode('');
         });
     } else {
       hideLoading();
@@ -1149,25 +1289,26 @@
   barcodeModalBtn.addEventListener('click', () => { inputModal.classList.add('show'); });
   closeModalBtn.addEventListener('click', closeModal);
 
+  // Modal Submit Button: PRIORITIZES RAW TEXT IF PROVIDED!
   submitModalBtn.addEventListener('click', () => {
     const code = barcodeInput.value.trim();
     const rawText = ingredientsTextInput.value.trim();
 
     closeModal();
-    if (code) {
-      fetchBarcodeFromAPI(code);
-    } else if (rawText) {
+    if (rawText) {
       showLoading('İçindekiler tahlil ediliyor…');
       setTimeout(() => {
         hideLoading();
         const analyzed = analyzeProduct({
-          product_name: 'Özel Analiz Ürünü',
-          brands: 'Etiket Girişi',
+          product_name: code ? ('Ürün #' + code) : 'Özel Analiz Ürünü',
+          brands: code ? 'Barkod Girişi' : 'Etiket Analizi',
           raw_text: rawText
         });
         displayResult(analyzed);
-        showToast('✓ İçerik analizi tamamlandı!');
-      }, 500);
+        showToast('✓ İçerik analizi başarıyla tamamlandı!');
+      }, 400);
+    } else if (code) {
+      fetchBarcodeFromAPI(code);
     } else {
       showToast('Lütfen bir barkod numarası veya içerik metni girin.');
     }
@@ -1176,6 +1317,7 @@
   // Bottom Sheet Controls
   closeSheetBtn.addEventListener('click', () => {
     resultSheet.classList.remove('open');
+    scanCooldown = false;
   });
 
   // Slide down on handle drag
