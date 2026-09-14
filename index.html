@@ -636,6 +636,32 @@
     loadingOverlay.classList.remove('show');
   }
 
+  /* AI PROXY — Cloudflare Worker (Gemini) ile gerçek yapay zeka analizi */
+  const AI_PROXY_URL = 'https://cool-frog-4829.imsalper.workers.dev';
+
+  async function analyzeWithAI(rawText, barcode) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+    try {
+      const res = await fetch(AI_PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ raw_text: rawText, barcode: barcode || '' }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data.error) return null;
+      // Minimal alan doğrulaması — beklenmedik/eksik yanıtla arayüzü kırmamak için
+      if (typeof data.score !== 'number' || !data.verdict || !Array.isArray(data.risks)) return null;
+      return data;
+    } catch (e) {
+      clearTimeout(timeoutId);
+      return null; // zaman aşımı, ağ hatası vb. — çağıran taraf yerel motora düşer
+    }
+  }
+
   /* CLIENT-SIDE SCAN RATE LIMITER — 50 tarama / 30 dakika */
   const RATE_LIMIT_MAX = 50;
   const RATE_LIMIT_WINDOW_MS = 30 * 60 * 1000;
@@ -1335,7 +1361,7 @@
   closeModalBtn.addEventListener('click', closeModal);
 
   // Modal Submit Button: PRIORITIZES RAW TEXT IF PROVIDED!
-  submitModalBtn.addEventListener('click', () => {
+  submitModalBtn.addEventListener('click', async () => {
     const code = barcodeInput.value.trim();
     const rawText = ingredientsTextInput.value.trim();
 
@@ -1346,17 +1372,22 @@
     }
     if (!registerScanAttempt()) return;
     if (rawText) {
-      showLoading('İçindekiler tahlil ediliyor…');
-      setTimeout(() => {
-        hideLoading();
+      showLoading('Yapay zeka içeriği analiz ediyor…');
+      const aiResult = await analyzeWithAI(rawText, code);
+      hideLoading();
+      if (aiResult) {
+        displayResult(aiResult);
+        showToast('✓ Yapay zeka analizi tamamlandı!');
+      } else {
+        // AI'a ulaşılamazsa (ağ hatası, limit, vb.) yerel motora düş
         const analyzed = analyzeProduct({
           product_name: code ? ('Ürün #' + code) : 'Özel Analiz Ürünü',
           brands: code ? 'Barkod Girişi' : 'Etiket Analizi',
           raw_text: rawText
         });
         displayResult(analyzed);
-        showToast('✓ İçerik analizi başarıyla tamamlandı!');
-      }, 400);
+        showToast('✓ İçerik analizi tamamlandı (çevrimdışı motor).');
+      }
     } else if (code) {
       fetchBarcodeFromAPI(code);
     }
