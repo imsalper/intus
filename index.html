@@ -527,6 +527,9 @@
         <p class="clearance-desc" id="eliminationDesc">
           İçerikteki hidrojenize yağlar ve kimyasal koruyucular karaciğer detoksifikasyon enzimlerini meşgul eder. Tamamen metabolize edilip böbrekler ve safra yoluyla atılması yaklaşık 3 gün sürer.
         </p>
+        <p style="font-size:11px; color:var(--text-faint); margin-top:8px; line-height:1.4;">
+          ℹ️ Bu değerlendirme etiket içeriğine dayalı genel bilgilendirme amaçlıdır, tıbbi tavsiye yerine geçmez.
+        </p>
       </div>
 
       <!-- Tetiklediği Hastalıklar & Riskler -->
@@ -631,6 +634,43 @@
   }
   function hideLoading() {
     loadingOverlay.classList.remove('show');
+  }
+
+  /* CLIENT-SIDE SCAN RATE LIMITER — 50 tarama / 30 dakika */
+  const RATE_LIMIT_MAX = 50;
+  const RATE_LIMIT_WINDOW_MS = 30 * 60 * 1000;
+  const RATE_LIMIT_KEY = 'intus_scan_timestamps';
+
+  function readScanLog() {
+    try {
+      const raw = localStorage.getItem(RATE_LIMIT_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function writeScanLog(arr) {
+    try { localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(arr)); } catch (e) {}
+  }
+
+  // Returns true if a new scan/analysis is allowed right now, and records it.
+  // Returns false (and shows a toast) if the 30-min / 50-scan limit is reached.
+  function registerScanAttempt() {
+    const now = Date.now();
+    let log = readScanLog().filter(ts => now - ts < RATE_LIMIT_WINDOW_MS);
+
+    if (log.length >= RATE_LIMIT_MAX) {
+      const oldest = log[0];
+      const minsLeft = Math.max(1, Math.ceil((RATE_LIMIT_WINDOW_MS - (now - oldest)) / 60000));
+      showToast(`⏳ 30 dakikalık tarama limitine ulaştınız. ${minsLeft} dk sonra tekrar deneyin.`);
+      return false;
+    }
+
+    log.push(now);
+    writeScanLog(log);
+    return true;
   }
 
   /* INTUS BIOCHEMICAL & HEALTH DATABASE ENGINE */
@@ -965,6 +1005,7 @@
   // Quick Demo Runner
   window.runDemo = function(key) {
     if (DEMO_PRODUCTS[key]) {
+      if (!registerScanAttempt()) return;
       showLoading('Hazır ürün taranıyor…');
       setTimeout(() => {
         hideLoading();
@@ -1116,6 +1157,7 @@
   /* SMART BARCODE & KAREKOD (QR CODE) HANDLER */
   function onBarcodeDetected(decodedText) {
     if (scanCooldown || !decodedText) return;
+    if (!registerScanAttempt()) return;
     scanCooldown = true;
     const raw = decodedText.trim();
     
@@ -1126,15 +1168,12 @@
     // Close any previous sheet to avoid showing old product
     resultSheet.classList.remove('open');
 
-    // 1. Check if QR code or Barcode contains digits
+    // 1. Check URL first — a link that happens to contain an 8-14 digit
+    //    substring (e.g. a product-id path) should not be misread as a barcode.
     const digitsOnly = raw.replace(/\D/g, '');
     const barcodeMatch = raw.match(/\b([0-9]{8,14})\b/);
 
-    if (barcodeMatch && barcodeMatch[1]) {
-      fetchBarcodeFromAPI(barcodeMatch[1]);
-    } else if (digitsOnly.length >= 8 && digitsOnly.length <= 14) {
-      fetchBarcodeFromAPI(digitsOnly);
-    } else if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
       showToast('🔗 Karekod web bağlantısı algılandı.');
       showLoading('Karekod inceleniyor…');
       setTimeout(() => {
@@ -1146,6 +1185,10 @@
         });
         displayResult(analyzed);
       }, 400);
+    } else if (barcodeMatch && barcodeMatch[1]) {
+      fetchBarcodeFromAPI(barcodeMatch[1]);
+    } else if (digitsOnly.length >= 8 && digitsOnly.length <= 14) {
+      fetchBarcodeFromAPI(digitsOnly);
     } else {
       showLoading('İçerik tahlil ediliyor…');
       setTimeout(() => {
@@ -1199,9 +1242,11 @@
         isScanning = true;
       }).catch(err => {
         console.warn('Camera stream notice:', err);
+        showToast('📷 Kameraya erişilemedi. Barkod veya içerik metnini elle girebilirsiniz.');
       });
     } catch(e) {
       console.warn('Scanner init error:', e);
+      showToast('📷 Kamera başlatılamadı. Elle giriş veya galeri seçeneğini kullanabilirsiniz.');
     }
   }
 
@@ -1295,6 +1340,11 @@
     const rawText = ingredientsTextInput.value.trim();
 
     closeModal();
+    if (!rawText && !code) {
+      showToast('Lütfen bir barkod numarası veya içerik metni girin.');
+      return;
+    }
+    if (!registerScanAttempt()) return;
     if (rawText) {
       showLoading('İçindekiler tahlil ediliyor…');
       setTimeout(() => {
@@ -1309,8 +1359,6 @@
       }, 400);
     } else if (code) {
       fetchBarcodeFromAPI(code);
-    } else {
-      showToast('Lütfen bir barkod numarası veya içerik metni girin.');
     }
   });
 
