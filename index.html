@@ -27,10 +27,7 @@
     align-items: center;
     padding: 24px 16px 60px;
   }
-  h1 {
-    font-size: 22px;
-    margin: 8px 0 4px;
-  }
+  h1 { font-size: 22px; margin: 8px 0 4px; }
   p.subtitle {
     color: var(--muted);
     margin: 0 0 24px;
@@ -45,8 +42,18 @@
     max-width: 420px;
     margin-bottom: 16px;
   }
+  .mode-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 420px;
+  }
   .btn {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     width: 100%;
     padding: 14px;
     border-radius: 12px;
@@ -54,7 +61,6 @@
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 12px;
   }
   .btn-primary { background: var(--accent); color: #06210f; }
   .btn-secondary { background: #2a2e37; color: var(--text); }
@@ -66,12 +72,7 @@
     margin-top: 12px;
     display: none;
   }
-  .status {
-    text-align: center;
-    color: var(--muted);
-    margin-top: 12px;
-    font-size: 14px;
-  }
+  .status { text-align: center; color: var(--muted); margin-top: 12px; font-size: 14px; }
   .result h2 { font-size: 18px; margin-top: 0; }
   .badge {
     display: inline-block;
@@ -83,11 +84,7 @@
   .badge-dusuk { background: rgba(74,222,128,0.15); color: var(--accent); }
   .badge-orta { background: rgba(251,191,36,0.15); color: var(--warn); }
   .badge-yuksek { background: rgba(248,113,113,0.15); color: var(--danger); }
-  .risk-score {
-    font-size: 40px;
-    font-weight: 800;
-    margin: 4px 0;
-  }
+  .risk-score { font-size: 40px; font-weight: 800; margin: 4px 0; }
   ul.ingredients { padding-left: 18px; margin: 8px 0; }
   ul.ingredients li { margin-bottom: 4px; }
   .additive-row {
@@ -98,11 +95,7 @@
     border-bottom: 1px solid #2a2e37;
   }
   .additive-row:last-child { border-bottom: none; }
-  #qr-reader {
-    width: 100%;
-    border-radius: 12px;
-    overflow: hidden;
-  }
+  #qr-reader { width: 100%; border-radius: 12px; overflow: hidden; }
   .error-box {
     background: rgba(248,113,113,0.1);
     border: 1px solid rgba(248,113,113,0.3);
@@ -112,55 +105,88 @@
     font-size: 14px;
     margin-top: 12px;
   }
+  .disclaimer {
+    color: var(--muted);
+    font-size: 11px;
+    text-align: center;
+    max-width: 380px;
+    margin-top: 24px;
+    line-height: 1.5;
+  }
   .hidden { display: none !important; }
+  .back-link {
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+    margin-top: 4px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
 </style>
 </head>
 <body>
 
 <h1>🩻 Intus</h1>
-<p class="subtitle">Ambalajın içindekiler yazısının fotoğrafını çek, analiz edelim.</p>
+<p class="subtitle">Ürünü tanımanın üç yolu — istediğini seç.</p>
 
-<!-- FOTOĞRAF MODU -->
-<div class="card" id="photo-card">
-  <label class="btn btn-primary" for="photo-input">📷 İçindekiler Fotoğrafı Çek</label>
-  <input type="file" id="photo-input" accept="image/*" capture="environment">
+<!-- ANA MENÜ -->
+<div class="mode-buttons" id="main-menu">
+  <button class="btn btn-primary" id="btn-product-photo">📦 Ürün Fotoğrafını Çek</button>
+  <button class="btn btn-primary" id="btn-ingredients-photo">📋 İçindekiler Fotoğrafını Çek</button>
+  <button class="btn btn-primary" id="btn-barcode">📊 Barkodu Okut</button>
+</div>
+
+<input type="file" id="photo-input" accept="image/*" capture="environment">
+
+<!-- FOTOĞRAF ÖNİZLEME + DURUM (hem ürün hem içerik fotoğrafı modları paylaşır) -->
+<div class="card hidden" id="photo-card">
   <img id="preview" alt="Seçilen fotoğraf önizleme">
   <div class="status hidden" id="photo-status">Analiz ediliyor…</div>
   <div class="error-box hidden" id="photo-error"></div>
-  <button class="btn btn-secondary hidden" id="try-barcode-btn">Barkodu Okutmayı Dene</button>
+  <div class="back-link" id="photo-back-link">← Ana menüye dön</div>
 </div>
 
 <!-- BARKOD MODU -->
 <div class="card hidden" id="barcode-card">
-  <h2 style="margin-top:0;font-size:16px;">Barkodu Okut</h2>
+  <h2 style="margin-top:0;font-size:16px;">Barkodu kameraya göster</h2>
   <div id="qr-reader"></div>
-  <div class="status hidden" id="barcode-status">Ürün aranıyor…</div>
+  <div class="status hidden" id="barcode-status">Ürün aranıyor (uluslararası veritabanı)…</div>
   <div class="error-box hidden" id="barcode-error"></div>
-  <button class="btn btn-secondary" id="back-to-photo-btn">← Fotoğrafla Dene</button>
+  <div class="back-link" id="barcode-back-link">← Ana menüye dön</div>
 </div>
 
 <!-- SONUÇ -->
 <div class="card result hidden" id="result-card"></div>
 
+<p class="disclaimer">Ürün içerikleri ve doğrulamaları yapay zeka tarafından oluşturulmuştur, kesinlik taşımaz. Bu uygulama tıbbi/beslenme tavsiyesi yerine geçmez.</p>
+
 <script>
 // ==== AYARLAR ====
-const WORKER_URL = "https://cool-frog-4829.imsalper.workers.dev"; // Gemini proxy endpoint'i
+const WORKER_URL = "https://cool-frog-4829.imsalper.workers.dev";
 const RATE_LIMIT_MAX = 50;
-const RATE_LIMIT_WINDOW_MS = 30 * 60 * 1000; // 30 dakika
+const RATE_LIMIT_WINDOW_MS = 30 * 60 * 1000;
 
 // ==== DOM referansları ====
+const mainMenu = document.getElementById("main-menu");
 const photoInput = document.getElementById("photo-input");
+const photoCard = document.getElementById("photo-card");
 const preview = document.getElementById("preview");
 const photoStatus = document.getElementById("photo-status");
 const photoError = document.getElementById("photo-error");
-const tryBarcodeBtn = document.getElementById("try-barcode-btn");
-const photoCard = document.getElementById("photo-card");
+const photoBackLink = document.getElementById("photo-back-link");
+
 const barcodeCard = document.getElementById("barcode-card");
 const barcodeStatus = document.getElementById("barcode-status");
 const barcodeError = document.getElementById("barcode-error");
-const backToPhotoBtn = document.getElementById("back-to-photo-btn");
+const barcodeBackLink = document.getElementById("barcode-back-link");
+
 const resultCard = document.getElementById("result-card");
 
+const btnProductPhoto = document.getElementById("btn-product-photo");
+const btnIngredientsPhoto = document.getElementById("btn-ingredients-photo");
+const btnBarcode = document.getElementById("btn-barcode");
+
+let currentPhotoMode = null; // "product_photo" | "ingredients_photo"
 let html5QrCode = null;
 
 // ==== Rate limit (client-side) ====
@@ -168,20 +194,61 @@ function checkRateLimit() {
   const now = Date.now();
   let timestamps = JSON.parse(localStorage.getItem("intus_scan_log") || "[]");
   timestamps = timestamps.filter(t => now - t < RATE_LIMIT_WINDOW_MS);
-  if (timestamps.length >= RATE_LIMIT_MAX) {
-    return false;
-  }
+  if (timestamps.length >= RATE_LIMIT_MAX) return false;
   timestamps.push(now);
   localStorage.setItem("intus_scan_log", JSON.stringify(timestamps));
   return true;
 }
 
-// ==== Fotoğraf akışı ====
+// ==== Menü -> mod seçimi ====
+btnProductPhoto.addEventListener("click", () => openPhotoMode("product_photo"));
+btnIngredientsPhoto.addEventListener("click", () => openPhotoMode("ingredients_photo"));
+btnBarcode.addEventListener("click", () => openBarcodeMode());
+
+function openPhotoMode(mode) {
+  currentPhotoMode = mode;
+  resetAll();
+  mainMenu.classList.add("hidden");
+  photoCard.classList.remove("hidden");
+  photoInput.click();
+}
+
+function openBarcodeMode() {
+  resetAll();
+  mainMenu.classList.add("hidden");
+  barcodeCard.classList.remove("hidden");
+  startBarcodeScanner();
+}
+
+photoBackLink.addEventListener("click", () => {
+  photoCard.classList.add("hidden");
+  mainMenu.classList.remove("hidden");
+  resetAll();
+});
+
+barcodeBackLink.addEventListener("click", () => {
+  stopBarcodeScanner();
+  barcodeCard.classList.add("hidden");
+  mainMenu.classList.remove("hidden");
+  resetAll();
+});
+
+function resetAll() {
+  photoError.classList.add("hidden");
+  barcodeError.classList.add("hidden");
+  resultCard.classList.add("hidden");
+  resultCard.innerHTML = "";
+  preview.style.display = "none";
+  preview.src = "";
+}
+
+// ==== Fotoğraf akışı (ürün fotoğrafı VE içindekiler fotoğrafı ortak) ====
 photoInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
+  photoInput.value = "";
   if (!file) return;
 
-  resetUI();
+  resetAll();
 
   if (!checkRateLimit()) {
     showPhotoError("Çok fazla tarama yaptın. Lütfen biraz sonra tekrar dene.");
@@ -199,32 +266,30 @@ photoInput.addEventListener("change", async (e) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        mode: "photo_analysis",
+        mode: currentPhotoMode,
         image_base64: base64,
         mime_type: file.type || "image/jpeg"
       })
     });
 
-    if (!response.ok) {
-      throw new Error("Sunucu hatası: " + response.status);
-    }
-
-    const data = await response.json();
+    const data = await safeJson(response);
     photoStatus.classList.add("hidden");
 
+    if (!response.ok || data === null) {
+      showPhotoError("Sunucu hatası, lütfen tekrar dene.");
+      return;
+    }
+
     if (data.basarili === false) {
-      showPhotoError(data.kullanici_mesaji || "İçindekiler listesi net okunamadı.");
-      tryBarcodeBtn.classList.remove("hidden");
+      showPhotoError(data.kullanici_mesaji || "Analiz yapılamadı.");
     } else if (data.basarili === true) {
       renderResult(data);
     } else {
       showPhotoError("Beklenmeyen bir yanıt alındı, lütfen tekrar dene.");
-      tryBarcodeBtn.classList.remove("hidden");
     }
   } catch (err) {
     photoStatus.classList.add("hidden");
     showPhotoError("Bağlantı hatası: analiz yapılamadı. Lütfen tekrar dene.");
-    tryBarcodeBtn.classList.remove("hidden");
     console.error(err);
   }
 });
@@ -238,39 +303,23 @@ function fileToBase64(file) {
   });
 }
 
+async function safeJson(response) {
+  try { return await response.json(); } catch (e) { return null; }
+}
+
 function showPhotoError(msg) {
   photoError.textContent = msg;
   photoError.classList.remove("hidden");
 }
 
-function resetUI() {
-  photoError.classList.add("hidden");
-  tryBarcodeBtn.classList.add("hidden");
-  resultCard.classList.add("hidden");
-  resultCard.innerHTML = "";
-}
-
-// ==== Barkod moduna geçiş ====
-tryBarcodeBtn.addEventListener("click", () => {
-  photoCard.classList.add("hidden");
-  barcodeCard.classList.remove("hidden");
-  startBarcodeScanner();
-});
-
-backToPhotoBtn.addEventListener("click", () => {
-  stopBarcodeScanner();
-  barcodeCard.classList.add("hidden");
-  photoCard.classList.remove("hidden");
-  resetUI();
-});
-
+// ==== Barkod akışı — uluslararası API (Open Food Facts) doğrudan bağlı ====
 function startBarcodeScanner() {
   html5QrCode = new Html5Qrcode("qr-reader");
   html5QrCode.start(
     { facingMode: "environment" },
     { fps: 10, qrbox: { width: 250, height: 150 } },
     onBarcodeDetected,
-    () => {} // sürekli tarama hatalarını sessizce yut
+    () => {}
   ).catch(err => {
     barcodeError.textContent = "Kamera açılamadı: " + err;
     barcodeError.classList.remove("hidden");
@@ -287,7 +336,7 @@ function stopBarcodeScanner() {
 async function onBarcodeDetected(decodedText) {
   stopBarcodeScanner();
   barcodeStatus.classList.remove("hidden");
-  barcodeStatus.textContent = "Ürün aranıyor…";
+  barcodeStatus.textContent = "Ürün aranıyor (uluslararası veritabanı)…";
   barcodeError.classList.add("hidden");
 
   if (!checkRateLimit()) {
@@ -303,7 +352,7 @@ async function onBarcodeDetected(decodedText) {
 
     if (offData.status !== 1 || !offData.product) {
       barcodeStatus.classList.add("hidden");
-      barcodeError.textContent = "Bu barkoda ait ürün bulunamadı. Fotoğraf yöntemini tekrar dene.";
+      barcodeError.textContent = "Bu barkoda ait ürün bulunamadı. Fotoğraf yöntemlerinden birini dene.";
       barcodeError.classList.remove("hidden");
       return;
     }
@@ -311,12 +360,11 @@ async function onBarcodeDetected(decodedText) {
     const ingredientsText = offData.product.ingredients_text_tr || offData.product.ingredients_text || "";
     if (!ingredientsText) {
       barcodeStatus.classList.add("hidden");
-      barcodeError.textContent = "Ürün bulundu ama içindekiler bilgisi yok.";
+      barcodeError.textContent = "Ürün bulundu ama içindekiler bilgisi yok. Fotoğraf yöntemlerinden birini dene.";
       barcodeError.classList.remove("hidden");
       return;
     }
 
-    // Bulunan içindekiler metnini analiz için Worker'a gönder
     const response = await fetch(WORKER_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -326,8 +374,14 @@ async function onBarcodeDetected(decodedText) {
         urun_adi: offData.product.product_name || null
       })
     });
-    const data = await response.json();
+    const data = await safeJson(response);
     barcodeStatus.classList.add("hidden");
+
+    if (!response.ok || data === null) {
+      barcodeError.textContent = "Sunucu hatası, lütfen tekrar dene.";
+      barcodeError.classList.remove("hidden");
+      return;
+    }
 
     if (data.basarili === true) {
       barcodeCard.classList.add("hidden");
