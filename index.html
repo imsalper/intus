@@ -4,155 +4,325 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Intus — Gıda Röntgeni</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root {
-    --bg: #0f1115;
-    --card: #1a1d24;
-    --text: #f2f3f5;
-    --muted: #9aa0aa;
-    --accent: #4ade80;
-    --danger: #f87171;
-    --warn: #fbbf24;
+    --bg: #0a0e14;
+    --bg-scan: #0d131c;
+    --card: #121a26;
+    --line: #223047;
+    --text: #eef2f5;
+    --muted: #7c8ba0;
+    --cyan: #37e6e0;
+    --cyan-dim: rgba(55, 230, 224, 0.14);
+    --amber: #ff9d47;
+    --danger: #ff5c6c;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
+    font-family: 'Inter', -apple-system, sans-serif;
+    background:
+      repeating-linear-gradient(
+        transparent, transparent 3px,
+        rgba(55, 230, 224, 0.02) 3px, rgba(55, 230, 224, 0.02) 4px
+      ),
+      radial-gradient(circle at 50% 0%, #101827 0%, var(--bg) 60%);
     color: var(--text);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 24px 16px 60px;
+    padding: 40px 20px 60px;
   }
-  h1 { font-size: 22px; margin: 8px 0 4px; }
+
+  .brand {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .brand-mark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--cyan);
+    margin: 0 0 6px;
+  }
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
   p.subtitle {
     color: var(--muted);
-    margin: 0 0 24px;
+    margin: 0 0 36px;
     text-align: center;
-    max-width: 360px;
+    max-width: 320px;
+    font-size: 14.5px;
+    line-height: 1.5;
   }
-  .card {
-    background: var(--card);
-    border-radius: 16px;
-    padding: 20px;
-    width: 100%;
-    max-width: 420px;
-    margin-bottom: 16px;
-  }
-  .mode-buttons {
+
+  /* ==== Tarama kartları (ana menü) ==== */
+  .scan-grid {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 16px;
     width: 100%;
-    max-width: 420px;
+    max-width: 380px;
   }
+  .scan-card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 26px 22px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+  }
+  .scan-card:active { transform: scale(0.98); }
+  .scan-card:hover {
+    border-color: var(--cyan);
+    background: #141d2c;
+  }
+  .scan-card:hover .reticle::before,
+  .scan-card:hover .reticle::after { border-color: var(--cyan); }
+
+  .reticle {
+    position: relative;
+    flex: none;
+    width: 60px;
+    height: 60px;
+  }
+  .reticle::before,
+  .reticle::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--line);
+    transition: border-color 0.15s ease;
+  }
+  .reticle::before { top: 0; left: 0; border-right: none; border-bottom: none; }
+  .reticle::after { bottom: 0; right: 0; border-left: none; border-top: none; }
+  .reticle-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .reticle svg { width: 30px; height: 30px; stroke: var(--text); }
+
+  .scan-card-body h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .scan-card-body p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .scan-card-tag {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* ==== Ortak: fotoğraf / barkod ekranları ==== */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 20px;
+    width: 100%;
+    max-width: 380px;
+    margin-bottom: 16px;
+  }
+  #preview {
+    width: 100%;
+    border-radius: 3px;
+    margin-top: 4px;
+    display: none;
+  }
+  .status {
+    text-align: center;
+    color: var(--cyan);
+    margin-top: 14px;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
+  }
+  .error-box {
+    background: rgba(255, 92, 108, 0.08);
+    border: 1px solid rgba(255, 92, 108, 0.3);
+    color: var(--danger);
+    padding: 14px;
+    border-radius: 3px;
+    font-size: 13.5px;
+    margin-top: 14px;
+    line-height: 1.4;
+  }
+  .back-link {
+    color: var(--muted);
+    font-size: 13.5px;
+    text-align: center;
+    margin-top: 16px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .back-link:hover { color: var(--cyan); }
+
+  #qr-reader {
+    width: 100%;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+
   .btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     width: 100%;
-    padding: 14px;
-    border-radius: 12px;
-    border: none;
-    font-size: 16px;
+    padding: 13px;
+    border-radius: 3px;
+    border: 1px solid var(--cyan);
+    background: transparent;
+    color: var(--cyan);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
+    transition: background 0.15s ease;
   }
-  .btn-primary { background: var(--accent); color: #06210f; }
-  .btn-secondary { background: #2a2e37; color: var(--text); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  input[type="file"] { display: none; }
-  #preview {
-    width: 100%;
-    border-radius: 12px;
-    margin-top: 12px;
-    display: none;
+  .btn:hover { background: var(--cyan-dim); }
+
+  /* ==== Sonuç ==== */
+  .result h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    margin: 0 0 2px;
   }
-  .status { text-align: center; color: var(--muted); margin-top: 12px; font-size: 14px; }
-  .result h2 { font-size: 18px; margin-top: 0; }
   .badge {
     display: inline-block;
     padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.03em;
   }
-  .badge-dusuk { background: rgba(74,222,128,0.15); color: var(--accent); }
-  .badge-orta { background: rgba(251,191,36,0.15); color: var(--warn); }
-  .badge-yuksek { background: rgba(248,113,113,0.15); color: var(--danger); }
-  .risk-score { font-size: 40px; font-weight: 800; margin: 4px 0; }
-  ul.ingredients { padding-left: 18px; margin: 8px 0; }
+  .badge-dusuk { background: rgba(55,230,224,0.12); color: var(--cyan); }
+  .badge-orta { background: rgba(255,157,71,0.12); color: var(--amber); }
+  .badge-yuksek { background: rgba(255,92,108,0.12); color: var(--danger); }
+  .risk-score {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 42px;
+    font-weight: 700;
+    margin: 6px 0 8px;
+  }
+  ul.ingredients { padding-left: 18px; margin: 8px 0; font-size: 14px; }
   ul.ingredients li { margin-bottom: 4px; }
   .additive-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #2a2e37;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
   }
   .additive-row:last-child { border-bottom: none; }
-  #qr-reader { width: 100%; border-radius: 12px; overflow: hidden; }
-  .error-box {
-    background: rgba(248,113,113,0.1);
-    border: 1px solid rgba(248,113,113,0.3);
-    color: var(--danger);
-    padding: 14px;
-    border-radius: 12px;
-    font-size: 14px;
-    margin-top: 12px;
-  }
+
   .disclaimer {
     color: var(--muted);
     font-size: 11px;
     text-align: center;
-    max-width: 380px;
-    margin-top: 24px;
+    max-width: 360px;
+    margin-top: 28px;
     line-height: 1.5;
   }
   .hidden { display: none !important; }
-  .back-link {
-    color: var(--muted);
-    font-size: 14px;
-    text-align: center;
-    margin-top: 4px;
-    cursor: pointer;
-    text-decoration: underline;
-  }
 </style>
 </head>
 <body>
 
-<h1>🩻 Intus</h1>
-<p class="subtitle">Ürünü tanımanın üç yolu — istediğini seç.</p>
+<div class="brand">
+  <p class="brand-mark">SCAN · ANALYZE · KNOW</p>
+  <h1>🩻 Intus</h1>
+</div>
+<p class="subtitle">Ne yiyeceğini gerçekten bil. Bir yöntem seç, taramaya başla.</p>
 
 <!-- ANA MENÜ -->
-<div class="mode-buttons" id="main-menu">
-  <button class="btn btn-primary" id="btn-product-photo">📦 Ürün Fotoğrafını Çek</button>
-  <button class="btn btn-primary" id="btn-ingredients-photo">📋 İçindekiler Fotoğrafını Çek</button>
-  <button class="btn btn-primary" id="btn-barcode">📊 Barkodu Okut</button>
+<div class="scan-grid" id="main-menu">
+  <button class="scan-card" id="btn-ingredients-photo">
+    <span class="reticle"><span class="reticle-inner">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/>
+        <path d="M9 3v4h6V3"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+        <line x1="8" y1="15.5" x2="16" y2="15.5"/>
+        <line x1="8" y1="19" x2="13" y2="19"/>
+      </svg>
+    </span></span>
+    <span class="scan-card-body">
+      <h2>İçindekiler Taraması</h2>
+      <p>Ambalajın içindekiler yazısını çek, tam analiz al.</p>
+    </span>
+    <span class="scan-card-tag">01</span>
+  </button>
+
+  <button class="scan-card" id="btn-barcode">
+    <span class="reticle"><span class="reticle-inner">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round">
+        <line x1="4" y1="5" x2="4" y2="19"/>
+        <line x1="8" y1="5" x2="8" y2="19"/>
+        <line x1="11" y1="5" x2="11" y2="19"/>
+        <line x1="14" y1="5" x2="14" y2="19" stroke-width="2.4"/>
+        <line x1="17" y1="5" x2="17" y2="19"/>
+        <line x1="20" y1="5" x2="20" y2="19" stroke-width="2.4"/>
+      </svg>
+    </span></span>
+    <span class="scan-card-body">
+      <h2>Barkod Taraması</h2>
+      <p>Uluslararası ürün veritabanından anında sonuç.</p>
+    </span>
+    <span class="scan-card-tag">02</span>
+  </button>
 </div>
 
 <input type="file" id="photo-input" accept="image/*" capture="environment">
 
-<!-- FOTOĞRAF ÖNİZLEME + DURUM (hem ürün hem içerik fotoğrafı modları paylaşır) -->
+<!-- FOTOĞRAF ÖNİZLEME + DURUM -->
 <div class="card hidden" id="photo-card">
   <img id="preview" alt="Seçilen fotoğraf önizleme">
-  <div class="status hidden" id="photo-status">Analiz ediliyor…</div>
+  <div class="status hidden" id="photo-status">ANALİZ EDİLİYOR…</div>
   <div class="error-box hidden" id="photo-error"></div>
-  <div class="back-link" id="photo-back-link">← Ana menüye dön</div>
+  <div class="back-link" id="photo-back-link">← ana menü</div>
 </div>
 
 <!-- BARKOD MODU -->
 <div class="card hidden" id="barcode-card">
-  <h2 style="margin-top:0;font-size:16px;">Barkodu kameraya göster</h2>
+  <h2 style="margin:0 0 14px;font-family:'Space Grotesk',sans-serif;font-size:16px;">Barkodu kameraya göster</h2>
   <div id="qr-reader"></div>
-  <div class="status hidden" id="barcode-status">Ürün aranıyor (uluslararası veritabanı)…</div>
+  <div class="status hidden" id="barcode-status">ÜRÜN ARANIYOR…</div>
   <div class="error-box hidden" id="barcode-error"></div>
-  <div class="back-link" id="barcode-back-link">← Ana menüye dön</div>
+  <div class="back-link" id="barcode-back-link">← ana menü</div>
 </div>
 
 <!-- SONUÇ -->
@@ -182,11 +352,10 @@ const barcodeBackLink = document.getElementById("barcode-back-link");
 
 const resultCard = document.getElementById("result-card");
 
-const btnProductPhoto = document.getElementById("btn-product-photo");
 const btnIngredientsPhoto = document.getElementById("btn-ingredients-photo");
 const btnBarcode = document.getElementById("btn-barcode");
 
-let currentPhotoMode = null; // "product_photo" | "ingredients_photo"
+let currentPhotoMode = null; // "ingredients_photo"
 let html5QrCode = null;
 
 // ==== Rate limit (client-side) ====
@@ -201,7 +370,6 @@ function checkRateLimit() {
 }
 
 // ==== Menü -> mod seçimi ====
-btnProductPhoto.addEventListener("click", () => openPhotoMode("product_photo"));
 btnIngredientsPhoto.addEventListener("click", () => openPhotoMode("ingredients_photo"));
 btnBarcode.addEventListener("click", () => openBarcodeMode());
 
@@ -242,7 +410,7 @@ function resetAll() {
   preview.src = "";
 }
 
-// ==== Fotoğraf akışı (ürün fotoğrafı VE içindekiler fotoğrafı ortak) ====
+// ==== Fotoğraf akışı ====
 photoInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   photoInput.value = "";
@@ -258,7 +426,7 @@ photoInput.addEventListener("change", async (e) => {
   preview.src = URL.createObjectURL(file);
   preview.style.display = "block";
   photoStatus.classList.remove("hidden");
-  photoStatus.textContent = "Analiz ediliyor…";
+  photoStatus.textContent = "ANALİZ EDİLİYOR…";
 
   try {
     const base64 = await compressImageToBase64(file);
@@ -294,7 +462,7 @@ photoInput.addEventListener("change", async (e) => {
   }
 });
 
-// Fotoğrafı gönderemeden önce küçültüp her zaman JPEG'e çevirir.
+// Fotoğrafı göndermeden önce küçültüp her zaman JPEG'e çevirir.
 // Telefon kamerasından gelen büyük/HEIC dosyaların analiz hatasına
 // sebep olmasını engellemek için (boyut + format normalizasyonu).
 function compressImageToBase64(file, maxDimension = 1600, quality = 0.85) {
@@ -362,7 +530,7 @@ function stopBarcodeScanner() {
 async function onBarcodeDetected(decodedText) {
   stopBarcodeScanner();
   barcodeStatus.classList.remove("hidden");
-  barcodeStatus.textContent = "Ürün aranıyor (uluslararası veritabanı)…";
+  barcodeStatus.textContent = "ÜRÜN ARANIYOR…";
   barcodeError.classList.add("hidden");
 
   if (!checkRateLimit()) {
@@ -378,7 +546,7 @@ async function onBarcodeDetected(decodedText) {
 
     if (offData.status !== 1 || !offData.product) {
       barcodeStatus.classList.add("hidden");
-      barcodeError.textContent = "Bu barkoda ait ürün bulunamadı. Fotoğraf yöntemlerinden birini dene.";
+      barcodeError.textContent = "Bu barkoda ait ürün bulunamadı. İçindekiler fotoğrafı yöntemini dene.";
       barcodeError.classList.remove("hidden");
       return;
     }
@@ -386,7 +554,7 @@ async function onBarcodeDetected(decodedText) {
     const ingredientsText = offData.product.ingredients_text_tr || offData.product.ingredients_text || "";
     if (!ingredientsText) {
       barcodeStatus.classList.add("hidden");
-      barcodeError.textContent = "Ürün bulundu ama içindekiler bilgisi yok. Fotoğraf yöntemlerinden birini dene.";
+      barcodeError.textContent = "Ürün bulundu ama içindekiler bilgisi yok. İçindekiler fotoğrafı yöntemini dene.";
       barcodeError.classList.remove("hidden");
       return;
     }
@@ -442,16 +610,16 @@ function renderResult(data) {
 
   resultCard.innerHTML = `
     <h2>${escapeHtml(data.urun_adi || "Ürün")}</h2>
-    <div class="risk-score">${data.saglik_riski_skoru}<span style="font-size:16px;color:var(--muted)"> / 100</span></div>
-    <span class="badge ${riskClass}">Sağlık Riski</span>
-    <p style="color:var(--muted);margin-top:16px;">${escapeHtml(data.genel_yorum || "")}</p>
-    <p><strong>Elimine süresi:</strong> ${escapeHtml(data.eliminasyon_suresi || "Bilinmiyor")}</p>
+    <div class="risk-score">${data.saglik_riski_skoru}<span style="font-size:16px;color:var(--muted);font-family:'JetBrains Mono',monospace;"> /100</span></div>
+    <span class="badge ${riskClass}">SAĞLIK RİSKİ</span>
+    <p style="color:var(--muted);margin-top:16px;font-size:14px;line-height:1.5;">${escapeHtml(data.genel_yorum || "")}</p>
+    <p style="font-size:14px;"><strong>Elimine süresi:</strong> ${escapeHtml(data.eliminasyon_suresi || "Bilinmiyor")}</p>
     ${Array.isArray(data.icindekiler) && data.icindekiler.length ? `
-      <p><strong>İçindekiler</strong></p>
+      <p style="font-size:14px;"><strong>İçindekiler</strong></p>
       <ul class="ingredients">${data.icindekiler.map(i => `<li>${escapeHtml(i)}</li>`).join("")}</ul>
     ` : ""}
-    ${additivesHtml ? `<p><strong>Katkı Maddeleri</strong></p>${additivesHtml}` : ""}
-    <button class="btn btn-secondary" onclick="location.reload()">Yeni Tarama</button>
+    ${additivesHtml ? `<p style="font-size:14px;"><strong>Katkı Maddeleri</strong></p>${additivesHtml}` : ""}
+    <button class="btn" style="margin-top:18px;" onclick="location.reload()">Yeni Tarama</button>
   `;
   resultCard.classList.remove("hidden");
 }
