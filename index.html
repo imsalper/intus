@@ -360,12 +360,46 @@
     background: rgba(255, 255, 255, 0.08);
     color: var(--cyan);
   }
+  .history-actions-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .history-action-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--muted);
+    font-size: 11px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+  }
+  .history-action-btn:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.14);
+  }
+  .btn-delete-selected {
+    background: rgba(255, 92, 108, 0.14) !important;
+    border-color: rgba(255, 92, 108, 0.45) !important;
+    color: var(--danger) !important;
+  }
+  .btn-delete-selected:hover {
+    background: var(--danger) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 12px rgba(255, 92, 108, 0.4);
+  }
   .history-clear-btn {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--muted);
     font-size: 11px;
-    padding: 3px 8px;
+    padding: 4px 8px;
     border-radius: 4px;
     cursor: pointer;
     display: flex;
@@ -377,6 +411,17 @@
     color: var(--danger);
     border-color: rgba(255, 92, 108, 0.3);
     background: rgba(255, 92, 108, 0.06);
+  }
+
+  .history-capacity-hint {
+    font-size: 11.5px;
+    color: var(--amber);
+    background: rgba(255, 157, 71, 0.1);
+    border: 1px solid rgba(255, 157, 71, 0.3);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+    line-height: 1.45;
   }
 
   .history-instruction {
@@ -514,6 +559,31 @@
   .score-mid { background: rgba(255, 157, 71, 0.12); color: var(--amber); border: 1px solid rgba(255, 157, 71, 0.3); }
   .score-high { background: rgba(255, 92, 108, 0.12); color: var(--danger); border: 1px solid rgba(255, 92, 108, 0.3); }
 
+  .history-item-single-delete {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.5;
+    transition: all 0.15s ease;
+    flex: none;
+    margin-left: 2px;
+  }
+  .history-item-card:hover .history-item-single-delete {
+    opacity: 0.9;
+  }
+  .history-item-single-delete:hover {
+    background: rgba(255, 92, 108, 0.18);
+    color: var(--danger);
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
   /* Boş Geçmiş Uyarısı */
   .history-empty-state {
     text-align: center;
@@ -536,7 +606,7 @@
     left: 50%;
     transform: translateX(-50%) translateY(0);
     width: calc(100% - 32px);
-    max-width: 440px;
+    max-width: 460px;
     background: rgba(14, 21, 32, 0.95);
     border: 1.5px solid var(--cyan);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(55, 230, 224, 0.3);
@@ -545,7 +615,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
     z-index: 100;
     backdrop-filter: blur(12px);
     animation: popUpBar 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -574,7 +644,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 210px;
+    max-width: 190px;
   }
   .compare-bar-actions {
     display: flex;
@@ -586,20 +656,42 @@
     background: var(--cyan);
     color: #081018;
     border: none;
-    padding: 9px 14px;
+    padding: 9px 12px;
     border-radius: 6px;
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 700;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     transition: all 0.15s ease;
+    white-space: nowrap;
   }
   .btn-compare-action:hover {
     background: #5cf1eb;
     box-shadow: 0 0 15px rgba(55, 230, 224, 0.6);
+  }
+  .btn-compare-delete {
+    background: rgba(255, 92, 108, 0.16);
+    border: 1px solid rgba(255, 92, 108, 0.4);
+    color: var(--danger);
+    padding: 9px 12px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn-compare-delete:hover {
+    background: var(--danger);
+    color: #ffffff;
+    box-shadow: 0 0 15px rgba(255, 92, 108, 0.5);
   }
   .btn-compare-cancel {
     background: rgba(255, 255, 255, 0.08);
@@ -1137,16 +1229,27 @@
       <h3>Son Taramalar</h3>
       <span class="history-count-badge" id="history-count-badge">0 Ürün</span>
     </div>
-    <button type="button" class="history-clear-btn" id="history-clear-btn" title="Geçmişi Temizle">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-      Temizle
-    </button>
+    <div class="history-actions-wrap">
+      <button type="button" class="history-action-btn" id="history-select-all-btn" title="Tümünü Seç veya Kaldır">Tümünü Seç</button>
+      <button type="button" class="history-action-btn btn-delete-selected hidden" id="history-delete-selected-btn" title="İşaretlenen Ürünleri Sil">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        <span id="header-delete-count-text">Seçilenleri Sil</span>
+      </button>
+      <button type="button" class="history-clear-btn" id="history-clear-btn" title="Tüm Geçmişi Temizle">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Temizle
+      </button>
+    </div>
   </div>
   
-  <p class="history-instruction">
+  <p class="history-instruction" id="history-instruction">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-    Kıyaslamak istediğin <strong>2 ürünün</strong> başındaki kutucuğu (tık) işaretle.
+    <span>Kıyaslamak için <strong>2 ürün</strong> veya silmek için istediğin ürünleri <strong>işaretle</strong>.</span>
   </p>
+
+  <div class="history-capacity-hint hidden" id="history-capacity-hint">
+    ⚠️ <strong>10 / 10 Kapasite Dolu:</strong> Yeni taramalara yer açmak için yukarıdan istemediğiniz ürünleri işaretleyip silebilirsiniz. (Silmeseniz dahi yeni taramalarda en eski ürün otomatik devredilir, taramaya kesintisiz devam edebilirsiniz.)
+  </div>
 
   <div class="history-items-container" id="history-items-container">
     <!-- JavaScript ile son 10 tarama doldurulur -->
@@ -1186,7 +1289,11 @@
   <div class="compare-bar-actions">
     <button type="button" class="btn-compare-action" id="btn-compare-action">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
-      Ürünleri Kıyasla
+      <span>Ürünleri Kıyasla</span>
+    </button>
+    <button type="button" class="btn-compare-delete" id="btn-compare-delete" title="İşaretlenen Ürünleri Listeden Sil">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+      <span id="floating-delete-count-text">Seçilenleri Sil</span>
     </button>
     <button type="button" class="btn-compare-cancel" id="btn-compare-cancel" title="Seçimi Temizle">✕</button>
   </div>
@@ -1241,6 +1348,10 @@ const historyDock = document.getElementById("history-dock");
 const historyItemsContainer = document.getElementById("history-items-container");
 const historyCountBadge = document.getElementById("history-count-badge");
 const historyClearBtn = document.getElementById("history-clear-btn");
+const historySelectAllBtn = document.getElementById("history-select-all-btn");
+const historyDeleteSelectedBtn = document.getElementById("history-delete-selected-btn");
+const headerDeleteCountText = document.getElementById("header-delete-count-text");
+const historyCapacityHint = document.getElementById("history-capacity-hint");
 
 const photoInput = document.getElementById("photo-input");
 const photoCard = document.getElementById("photo-card");
@@ -1264,6 +1375,8 @@ const compareFloatingBar = document.getElementById("compare-floating-bar");
 const compareBarCount = document.getElementById("compare-bar-count");
 const compareBarNames = document.getElementById("compare-bar-names");
 const btnCompareAction = document.getElementById("btn-compare-action");
+const btnCompareDelete = document.getElementById("btn-compare-delete");
+const floatingDeleteCountText = document.getElementById("floating-delete-count-text");
 const btnCompareCancel = document.getElementById("btn-compare-cancel");
 
 const compareModalOverlay = document.getElementById("compare-modal-overlay");
@@ -1333,19 +1446,19 @@ const DEMO_PRODUCTS = [
   }
 ];
 
-// ==== GEÇMİŞ YÖNETİMİ (SON 10 TARAMA) ====
+// ==== GEÇMİŞ YÖNETİMİ (SON 10 TARAMA & SİLME SİSTEMİ) ====
 function getHistory() {
   try {
     const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
-    if (!raw) {
+    if (raw === null) {
       // İlk açılışta hazır demo verilerini yükle
       localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(DEMO_PRODUCTS));
       return DEMO_PRODUCTS;
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEMO_PRODUCTS;
+    return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
-    return DEMO_PRODUCTS;
+    return [];
   }
 }
 
@@ -1362,8 +1475,10 @@ function saveToHistory(data) {
       katki_maddeleri: Array.isArray(data.katki_maddeleri) ? data.katki_maddeleri : [],
       timestamp: Date.now()
     };
-    // En başa ekle ve max 10 tarama ile sınırla
-    history = [newItem, ...history.filter(h => h.urun_adi !== newItem.urun_adi)].slice(0, 10);
+    // Aynı isimdeki eski taramayı yenisiyle güncelle
+    const filtered = history.filter(h => h.urun_adi !== newItem.urun_adi);
+    // En fazla 10 tarama tut (10'u aşarsa en eski tarama devredilir, taramaya kesintisiz devam edilir)
+    history = [newItem, ...filtered].slice(0, 10);
     localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
     renderHistory();
   } catch (e) {
@@ -1371,14 +1486,83 @@ function saveToHistory(data) {
   }
 }
 
+// Seçilen ürünleri sil
+function deleteSelectedProducts() {
+  if (selectedForCompare.length === 0) return;
+  const count = selectedForCompare.length;
+  if (confirm(`${count} adet işaretli ürünü listeden silmek istiyor musunuz?`)) {
+    let history = getHistory();
+    history = history.filter(item => !selectedForCompare.includes(item.id));
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+    selectedForCompare = [];
+    renderHistory();
+  }
+}
+
+// Tek bir ürünü sil
+function deleteSingleProduct(id) {
+  let history = getHistory();
+  const target = history.find(h => h.id === id);
+  const name = target ? target.urun_adi : "Bu ürün";
+  if (confirm(`"${name}" tarama listesinden silinsin mi?`)) {
+    history = history.filter(item => item.id !== id);
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+    selectedForCompare = selectedForCompare.filter(itemId => itemId !== id);
+    renderHistory();
+  }
+}
+
+// Tümünü seç / seçimi kaldır
+function toggleSelectAll() {
+  const history = getHistory();
+  if (history.length === 0) return;
+  if (selectedForCompare.length === history.length) {
+    selectedForCompare = [];
+  } else {
+    selectedForCompare = history.map(h => h.id);
+  }
+  renderHistory();
+}
+
 function renderHistory() {
   const history = getHistory();
-  historyCountBadge.textContent = `${history.length} / 10 Ürün`;
+
+  // Kapasite göstergesi (10 / 10 Dolu vs X / 10 Ürün)
+  if (history.length >= 10) {
+    historyCountBadge.textContent = "10 / 10 (Dolu)";
+    historyCountBadge.style.color = "var(--amber)";
+    historyCountBadge.style.background = "rgba(255, 157, 71, 0.15)";
+    if (historyCapacityHint) historyCapacityHint.classList.remove("hidden");
+  } else {
+    historyCountBadge.textContent = `${history.length} / 10 Ürün`;
+    historyCountBadge.style.color = "var(--cyan)";
+    historyCountBadge.style.background = "rgba(255, 255, 255, 0.08)";
+    if (historyCapacityHint) historyCapacityHint.classList.add("hidden");
+  }
+
+  // Tümünü seç butonu yazısı
+  if (historySelectAllBtn) {
+    if (history.length > 0 && selectedForCompare.length === history.length) {
+      historySelectAllBtn.textContent = "Seçimi Kaldır";
+    } else {
+      historySelectAllBtn.textContent = "Tümünü Seç";
+    }
+  }
+
+  // Üst menü Seçilenleri Sil butonu görünürlüğü
+  if (historyDeleteSelectedBtn) {
+    if (selectedForCompare.length > 0) {
+      historyDeleteSelectedBtn.classList.remove("hidden");
+      if (headerDeleteCountText) headerDeleteCountText.textContent = `Seçilenleri Sil (${selectedForCompare.length})`;
+    } else {
+      historyDeleteSelectedBtn.classList.add("hidden");
+    }
+  }
 
   if (history.length === 0) {
     historyItemsContainer.innerHTML = `
       <div class="history-empty-state">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         <p>Henüz kayıtlı tarama yok. Yukarıdaki tuşlardan birini kullanarak ürün tara.</p>
       </div>
     `;
@@ -1400,7 +1584,7 @@ function renderHistory() {
 
     return `
       <div class="history-item-card ${isSelected ? 'is-selected' : ''}" data-id="${item.id}">
-        <div class="custom-tick-box" title="Kıyaslamak için seç">
+        <div class="custom-tick-box" title="İşaretle / Seç">
           <svg viewBox="0 0 24 24" fill="none">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
@@ -1415,15 +1599,32 @@ function renderHistory() {
         <div class="history-item-score">
           <span class="history-score-pill ${riskClass}">${item.saglik_riski_skoru} · ${riskLabel}</span>
         </div>
+        <button type="button" class="history-item-single-delete" title="Bu ürünü sil" data-del-id="${item.id}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            <line x1="10" y1="11" x2="10" y2="17"/>
+            <line x1="14" y1="11" x2="14" y2="17"/>
+          </svg>
+        </button>
       </div>
     `;
   }).join("");
 
-  // Kartlara tıklama olayı
+  // Kartlara tıklama olayı (seçim / tık)
   document.querySelectorAll(".history-item-card").forEach(card => {
-    card.addEventListener("click", (e) => {
+    card.addEventListener("click", () => {
       const id = card.getAttribute("data-id");
       toggleCompareItem(id);
+    });
+  });
+
+  // Tekil silme butonları
+  document.querySelectorAll(".history-item-single-delete").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute("data-del-id");
+      deleteSingleProduct(id);
     });
   });
 
@@ -1434,10 +1635,6 @@ function toggleCompareItem(id) {
   if (selectedForCompare.includes(id)) {
     selectedForCompare = selectedForCompare.filter(itemId => itemId !== id);
   } else {
-    if (selectedForCompare.length >= 2) {
-      // 2 ürün dolduysa ilk seçileni çıkartıp yenisini ekle
-      selectedForCompare.shift();
-    }
     selectedForCompare.push(id);
   }
   renderHistory();
@@ -1445,28 +1642,47 @@ function toggleCompareItem(id) {
 
 function updateCompareFloatingBar() {
   const history = getHistory();
-  if (selectedForCompare.length === 2) {
-    const item1 = history.find(h => h.id === selectedForCompare[0]);
-    const item2 = history.find(h => h.id === selectedForCompare[1]);
-    if (item1 && item2) {
-      compareBarNames.textContent = `${item1.urun_adi}  ⚡  ${item2.urun_adi}`;
-      compareBarCount.textContent = "2 Ürün Karşılaştırmaya Hazır";
-      compareFloatingBar.classList.remove("hidden");
-      return;
-    }
-  } else if (selectedForCompare.length === 1) {
-    const item1 = history.find(h => h.id === selectedForCompare[0]);
-    compareBarNames.textContent = `${item1 ? item1.urun_adi : '1 Ürün Seçildi'} (1 ürün daha seçin)`;
-    compareBarCount.textContent = "1 / 2 Ürün Seçildi";
-    compareFloatingBar.classList.remove("hidden");
+  const count = selectedForCompare.length;
+
+  if (count === 0) {
+    compareFloatingBar.classList.add("hidden");
     return;
   }
-  compareFloatingBar.classList.add("hidden");
+
+  compareFloatingBar.classList.remove("hidden");
+
+  if (count === 2) {
+    const item1 = history.find(h => h.id === selectedForCompare[0]);
+    const item2 = history.find(h => h.id === selectedForCompare[1]);
+    compareBarNames.textContent = `${item1 ? item1.urun_adi : ''}  ⚡  ${item2 ? item2.urun_adi : ''}`;
+    compareBarCount.textContent = "2 Ürün Seçildi";
+    btnCompareAction.classList.remove("hidden");
+    btnCompareDelete.classList.remove("hidden");
+    if (floatingDeleteCountText) floatingDeleteCountText.textContent = "Seçilenleri Sil (2)";
+  } else if (count === 1) {
+    const item1 = history.find(h => h.id === selectedForCompare[0]);
+    compareBarNames.textContent = `${item1 ? item1.urun_adi : '1 Ürün Seçildi'} (Kıyaslamak için 1 ürün daha seçin)`;
+    compareBarCount.textContent = "1 / 2 Ürün Seçildi";
+    btnCompareAction.classList.add("hidden");
+    btnCompareDelete.classList.remove("hidden");
+    if (floatingDeleteCountText) floatingDeleteCountText.textContent = "Seçileni Sil (1)";
+  } else {
+    compareBarNames.textContent = "Toplu silme modu (Kıyaslama için tam 2 ürün seçiniz)";
+    compareBarCount.textContent = `${count} Ürün Seçildi`;
+    btnCompareAction.classList.add("hidden");
+    btnCompareDelete.classList.remove("hidden");
+    if (floatingDeleteCountText) floatingDeleteCountText.textContent = `Seçilenleri Sil (${count})`;
+  }
 }
 
+// Buton Olay Dinleyicileri
+historySelectAllBtn.addEventListener("click", toggleSelectAll);
+historyDeleteSelectedBtn.addEventListener("click", deleteSelectedProducts);
+btnCompareDelete.addEventListener("click", deleteSelectedProducts);
+
 historyClearBtn.addEventListener("click", () => {
-  if (confirm("Kayıtlı tarama geçmişini temizlemek istiyor musunuz?")) {
-    localStorage.removeItem(HISTORY_STORAGE_KEY);
+  if (confirm("Tüm tarama geçmişini temizlemek istiyor musunuz?")) {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify([]));
     selectedForCompare = [];
     renderHistory();
   }
