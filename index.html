@@ -3,194 +3,977 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Intus — Gıda Röntgeni</title>
+<title>Intus — Gıda Röntgeni & Biyokimyasal Analiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root {
     --bg: #0a0e14;
     --bg-scan: #0d131c;
     --card: #121a26;
+    --card-hover: #162233;
     --line: #223047;
+    --line-light: rgba(55, 230, 224, 0.22);
     --text: #eef2f5;
     --muted: #7c8ba0;
     --cyan: #37e6e0;
-    --cyan-dim: rgba(55, 230, 224, 0.14);
+    --cyan-dim: rgba(55, 230, 224, 0.12);
+    --cyan-glow: rgba(55, 230, 224, 0.35);
     --amber: #ff9d47;
+    --amber-dim: rgba(255, 157, 71, 0.14);
     --danger: #ff5c6c;
+    --danger-dim: rgba(255, 92, 108, 0.14);
+    --success: #10b981;
+    --success-dim: rgba(16, 185, 129, 0.14);
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
     margin: 0;
-    font-family: 'Inter', -apple-system, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background:
       repeating-linear-gradient(
         transparent, transparent 3px,
-        rgba(55, 230, 224, 0.02) 3px, rgba(55, 230, 224, 0.02) 4px
+        rgba(55, 230, 224, 0.015) 3px, rgba(55, 230, 224, 0.015) 4px
       ),
-      radial-gradient(circle at 50% 0%, #101827 0%, var(--bg) 60%);
+      radial-gradient(circle at 50% 0%, #111d30 0%, var(--bg) 65%);
     color: var(--text);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px 20px 60px;
+    padding: 36px 16px 80px;
+    -webkit-font-smoothing: antialiased;
   }
 
   .brand {
     text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    position: relative;
   }
-  .brand-mark {
+  .brand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.18em;
     color: var(--cyan);
-    margin: 0 0 6px;
+    background: rgba(55, 230, 224, 0.08);
+    border: 1px solid rgba(55, 230, 224, 0.25);
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
   }
+  .brand-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+    animation: pulseDot 2s infinite ease-in-out;
+  }
+  @keyframes pulseDot {
+    0%, 100% { opacity: 0.4; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
   h1 {
     font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    font-size: 30px;
+    font-weight: 800;
+    font-size: 32px;
     margin: 0 0 6px;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #ffffff 40%, var(--cyan) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
   p.subtitle {
     color: var(--muted);
-    margin: 0 0 36px;
+    margin: 0 0 28px;
     text-align: center;
-    max-width: 320px;
-    font-size: 14.5px;
+    max-width: 360px;
+    font-size: 14px;
     line-height: 1.5;
   }
 
-  /* ==== Tarama kartları (ana menü) ==== */
+  /* =========================================================
+     MODERN & GÖRSEL 2 TARAMA TUŞU (ANA MENÜ)
+     ========================================================= */
   .scan-grid {
     display: flex;
     flex-direction: column;
     gap: 16px;
     width: 100%;
-    max-width: 380px;
+    max-width: 440px;
   }
+
   .scan-card {
     position: relative;
-    background: var(--card);
+    background: linear-gradient(145deg, rgba(18, 26, 38, 0.95), rgba(13, 19, 28, 0.98));
     border: 1px solid var(--line);
-    border-radius: 4px;
-    padding: 26px 22px;
+    border-radius: 12px;
+    padding: 20px;
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 16px;
     cursor: pointer;
     text-align: left;
-    transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+    overflow: hidden;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
   }
-  .scan-card:active { transform: scale(0.98); }
   .scan-card:hover {
-    border-color: var(--cyan);
-    background: #141d2c;
+    transform: translateY(-2px);
+    background: linear-gradient(145deg, #162438, #101926);
   }
-  .scan-card:hover .reticle::before,
-  .scan-card:hover .reticle::after { border-color: var(--cyan); }
+  .scan-card:active {
+    transform: translateY(0) scale(0.985);
+  }
 
+  /* Kart Vurgu Çizgileri ve Glow Efekti */
+  .scan-card-photo {
+    border-color: rgba(55, 230, 224, 0.25);
+  }
+  .scan-card-photo:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 8px 30px rgba(55, 230, 224, 0.2);
+  }
+  .scan-card-photo::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0.7;
+  }
+
+  .scan-card-barcode {
+    border-color: rgba(255, 157, 71, 0.25);
+  }
+  .scan-card-barcode:hover {
+    border-color: var(--amber);
+    box-shadow: 0 8px 30px rgba(255, 157, 71, 0.2);
+  }
+  .scan-card-barcode::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--amber), transparent);
+    opacity: 0.7;
+  }
+
+  /* Reticle (Yüksek Teknolojili Hedef Alanı / İkon) */
   .reticle {
     position: relative;
     flex: none;
-    width: 60px;
-    height: 60px;
+    width: 68px;
+    height: 68px;
+    border-radius: 10px;
+    background: rgba(10, 14, 20, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
   }
-  .reticle::before,
-  .reticle::after {
-    content: "";
+  .reticle-corner {
     position: absolute;
-    width: 16px;
-    height: 16px;
-    border: 2px solid var(--line);
-    transition: border-color 0.15s ease;
+    width: 8px;
+    height: 8px;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
   }
-  .reticle::before { top: 0; left: 0; border-right: none; border-bottom: none; }
-  .reticle::after { bottom: 0; right: 0; border-left: none; border-top: none; }
+  .reticle-tl { top: 3px; left: 3px; border-top-color: var(--line-light); border-left-color: var(--line-light); }
+  .reticle-tr { top: 3px; right: 3px; border-top-color: var(--line-light); border-right-color: var(--line-light); }
+  .reticle-bl { bottom: 3px; left: 3px; border-bottom-color: var(--line-light); border-left-color: var(--line-light); }
+  .reticle-br { bottom: 3px; right: 3px; border-bottom-color: var(--line-light); border-right-color: var(--line-light); }
+
+  .scan-card-photo:hover .reticle-corner {
+    border-color: var(--cyan);
+  }
+  .scan-card-barcode:hover .reticle-corner {
+    border-color: var(--amber);
+  }
+
   .reticle-inner {
-    position: absolute;
-    inset: 0;
+    position: relative;
+    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  .reticle svg { width: 30px; height: 30px; stroke: var(--text); }
+  .reticle svg {
+    width: 34px;
+    height: 34px;
+    transition: transform 0.2s ease;
+  }
+  .scan-card:hover .reticle svg {
+    transform: scale(1.08);
+  }
+
+  /* Reticle Lazer Animasyon Çizgisi */
+  .reticle-laser {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    height: 2px;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+    animation: laserScan 2.4s ease-in-out infinite alternate;
+    opacity: 0.8;
+  }
+  .reticle-laser.laser-amber {
+    background: var(--amber);
+    box-shadow: 0 0 8px var(--amber);
+  }
+  @keyframes laserScan {
+    0% { top: 6px; opacity: 0.2; }
+    50% { opacity: 1; }
+    100% { top: 60px; opacity: 0.2; }
+  }
+
+  /* Kart Metinleri ve Etiketler */
+  .scan-card-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .scan-card-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .scan-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .scan-pill-photo {
+    background: rgba(55, 230, 224, 0.12);
+    color: var(--cyan);
+    border: 1px solid rgba(55, 230, 224, 0.25);
+  }
+  .scan-pill-barcode {
+    background: rgba(255, 157, 71, 0.12);
+    color: var(--amber);
+    border: 1px solid rgba(255, 157, 71, 0.25);
+  }
+  .scan-card-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    opacity: 0.7;
+  }
 
   .scan-card-body h2 {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 17px;
-    font-weight: 600;
-    margin: 0 0 4px;
+    font-size: 17.5px;
+    font-weight: 700;
+    margin: 2px 0 4px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
   .scan-card-body p {
     margin: 0;
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--muted);
-    line-height: 1.4;
+    line-height: 1.45;
   }
-  .scan-card-tag {
-    position: absolute;
-    top: 12px;
-    right: 14px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+  .scan-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .scan-card-hint {
+    font-size: 11.5px;
     color: var(--muted);
-    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .scan-card-action-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    transition: transform 0.15s ease;
+  }
+  .scan-card-photo .scan-card-action-text { color: var(--cyan); }
+  .scan-card-barcode .scan-card-action-text { color: var(--amber); }
+  .scan-card:hover .scan-card-action-text {
+    transform: translateX(3px);
   }
 
-  /* ==== Ortak: fotoğraf / barkod ekranları ==== */
+  /* =========================================================
+     2 TUŞUN ALTINDAKİ SON 10 TARAMA LİSTESİ & TIK SİSTEMİ
+     ========================================================= */
+  .history-dock {
+    width: 100%;
+    max-width: 440px;
+    margin-top: 24px;
+    background: rgba(18, 26, 38, 0.7);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 16px;
+    backdrop-filter: blur(8px);
+  }
+  .history-dock-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .history-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .history-title-wrap h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text);
+  }
+  .history-count-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--cyan);
+  }
+  .history-clear-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--muted);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+  }
+  .history-clear-btn:hover {
+    color: var(--danger);
+    border-color: rgba(255, 92, 108, 0.3);
+    background: rgba(255, 92, 108, 0.06);
+  }
+
+  .history-instruction {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0 0 12px;
+    padding: 7px 10px;
+    background: rgba(55, 230, 224, 0.04);
+    border: 1px dashed rgba(55, 230, 224, 0.2);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .history-instruction strong {
+    color: var(--cyan);
+  }
+
+  .history-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 480px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .history-items-container::-webkit-scrollbar {
+    width: 4px;
+  }
+  .history-items-container::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 4px;
+  }
+
+  /* Tekil Tarama Kartı */
+  .history-item-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(13, 19, 28, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.16s ease;
+  }
+  .history-item-card:hover {
+    background: rgba(20, 30, 44, 0.95);
+    border-color: rgba(55, 230, 224, 0.25);
+  }
+  .history-item-card.is-selected {
+    background: rgba(55, 230, 224, 0.08);
+    border-color: var(--cyan);
+    box-shadow: 0 0 14px rgba(55, 230, 224, 0.15);
+  }
+
+  /* Özel Tik / Checkbox Kutusu */
+  .custom-tick-box {
+    position: relative;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid rgba(55, 230, 224, 0.4);
+    background: rgba(10, 14, 20, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .history-item-card:hover .custom-tick-box {
+    border-color: var(--cyan);
+  }
+  .history-item-card.is-selected .custom-tick-box {
+    background: var(--cyan);
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(55, 230, 224, 0.6);
+  }
+  .custom-tick-box svg {
+    width: 14px;
+    height: 14px;
+    stroke: #0a0e14;
+    stroke-width: 3;
+    opacity: 0;
+    transform: scale(0.6);
+    transition: all 0.15s ease;
+  }
+  .history-item-card.is-selected .custom-tick-box svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .history-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .history-item-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  .history-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .history-item-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .history-item-score {
+    flex: none;
+    text-align: right;
+  }
+  .history-score-pill {
+    display: inline-block;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .score-low { background: rgba(55, 230, 224, 0.12); color: var(--cyan); border: 1px solid rgba(55, 230, 224, 0.3); }
+  .score-mid { background: rgba(255, 157, 71, 0.12); color: var(--amber); border: 1px solid rgba(255, 157, 71, 0.3); }
+  .score-high { background: rgba(255, 92, 108, 0.12); color: var(--danger); border: 1px solid rgba(255, 92, 108, 0.3); }
+
+  /* Boş Geçmiş Uyarısı */
+  .history-empty-state {
+    text-align: center;
+    padding: 24px 10px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .history-empty-state svg {
+    margin-bottom: 8px;
+    stroke: var(--muted);
+    opacity: 0.6;
+  }
+
+  /* =========================================================
+     YÜZEN KIYASLAMA BARI (2 ÜRÜN SEÇİLDİĞİNDE BELİRİR)
+     ========================================================= */
+  .compare-floating-bar {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    width: calc(100% - 32px);
+    max-width: 440px;
+    background: rgba(14, 21, 32, 0.95);
+    border: 1.5px solid var(--cyan);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(55, 230, 224, 0.3);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    animation: popUpBar 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes popUpBar {
+    0% { transform: translateX(-50%) translateY(40px); opacity: 0; }
+    100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+  }
+  .compare-bar-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .compare-bar-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .compare-bar-names {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 210px;
+  }
+  .compare-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+  }
+  .btn-compare-action {
+    background: var(--cyan);
+    color: #081018;
+    border: none;
+    padding: 9px 14px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .btn-compare-action:hover {
+    background: #5cf1eb;
+    box-shadow: 0 0 15px rgba(55, 230, 224, 0.6);
+  }
+  .btn-compare-cancel {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s ease;
+  }
+  .btn-compare-cancel:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  /* =========================================================
+     YAN YANA KIYASLAMA MODALI & YEŞİL / KIRMIZI ÇERÇEVELER
+     ========================================================= */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 8, 13, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    overflow-y: auto;
+  }
+  .modal-window {
+    background: #0e1622;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px 20px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    animation: modalIn 0.22s ease-out;
+  }
+  @keyframes modalIn {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .modal-header-title h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin: 4px 0 0;
+    color: #ffffff;
+  }
+  .modal-badge-lab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--cyan);
+    letter-spacing: 0.15em;
+    background: rgba(55, 230, 224, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .modal-close-btn {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .modal-close-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 92, 108, 0.2);
+    border-color: var(--danger);
+  }
+
+  /* Yapay Zeka Karar Özeti Bannerı */
+  .compare-verdict-banner {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+  .verdict-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--success);
+    margin-bottom: 6px;
+  }
+  .verdict-body {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #d1d9e2;
+  }
+
+  /* YAN YANA ÜRÜN KARTLARI */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  @media (max-width: 580px) {
+    .compare-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .compare-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 18px 16px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
+  }
+
+  /* === KULLANICININ ÖZEL İSTEĞİ: İYİ OLAN YEŞİL ÇERÇEVE, KÖTÜ OLAN KIRMIZI ÇERÇEVE === */
+  .compare-card.winner-card {
+    border: 3.5px solid #10b981 !important;
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.14) 0%, rgba(18, 26, 38, 0.98) 100%) !important;
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.4), inset 0 0 20px rgba(16, 185, 129, 0.08) !important;
+  }
+  .compare-card.loser-card {
+    border: 3.5px solid #ef4444 !important;
+    background: linear-gradient(180deg, rgba(239, 68, 68, 0.14) 0%, rgba(18, 26, 38, 0.98) 100%) !important;
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.4), inset 0 0 20px rgba(239, 68, 68, 0.08) !important;
+  }
+  .compare-card.tie-card {
+    border: 3px solid var(--amber) !important;
+    background: linear-gradient(180deg, rgba(255, 157, 71, 0.12) 0%, rgba(18, 26, 38, 0.98) 100%) !important;
+    box-shadow: 0 0 20px rgba(255, 157, 71, 0.3) !important;
+  }
+
+  .card-status-ribbon {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 12px;
+    align-self: flex-start;
+  }
+  .winner-card .card-status-ribbon {
+    background: #10b981;
+    color: #022013;
+  }
+  .loser-card .card-status-ribbon {
+    background: #ef4444;
+    color: #ffffff;
+  }
+  .tie-card .card-status-ribbon {
+    background: var(--amber);
+    color: #1a0f05;
+  }
+
+  .compare-card-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 10px;
+    color: #ffffff;
+    line-height: 1.35;
+  }
+  .compare-card-score-box {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .compare-card-score-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 38px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .winner-card .compare-card-score-num { color: #10b981; }
+  .loser-card .compare-card-score-num { color: #ef4444; }
+  .tie-card .compare-card-score-num { color: var(--amber); }
+
+  .compare-card-score-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .compare-metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 12.5px;
+  }
+  .compare-metric-row:last-child {
+    border-bottom: none;
+  }
+  .compare-metric-label {
+    color: var(--muted);
+  }
+  .compare-metric-val {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* Kıyaslama Tablosu / Matrisi */
+  .compare-matrix-wrap {
+    margin-top: 10px;
+    background: rgba(13, 19, 28, 0.85);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    overflow-x: auto;
+  }
+  .compare-matrix-wrap h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14.5px;
+    margin: 0 0 12px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .compare-matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    text-align: left;
+  }
+  .compare-matrix-table th {
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    border-bottom: 1px solid var(--line);
+  }
+  .compare-matrix-table td {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    vertical-align: middle;
+  }
+  .compare-matrix-table tr:last-child td {
+    border-bottom: none;
+  }
+  .col-win {
+    color: #10b981;
+    font-weight: 600;
+  }
+  .col-lose {
+    color: #ef4444;
+    font-weight: 600;
+  }
+
+  /* Klinik Tavsiye Kutusu */
+  .compare-ai-recommendation {
+    margin-top: 16px;
+    background: rgba(55, 230, 224, 0.06);
+    border: 1px solid rgba(55, 230, 224, 0.25);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #e2e8f0;
+  }
+  .compare-ai-recommendation strong {
+    color: var(--cyan);
+  }
+
+  .compare-modal-footer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* =========================================================
+     ORTAK EKRANLAR (FOTOĞRAF, BARKOD, SONUÇ)
+     ========================================================= */
   .card {
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: 4px;
-    padding: 20px;
+    border-radius: 12px;
+    padding: 22px;
     width: 100%;
-    max-width: 380px;
+    max-width: 440px;
     margin-bottom: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
   }
   #preview {
     width: 100%;
-    border-radius: 3px;
-    margin-top: 4px;
+    border-radius: 8px;
+    margin-top: 8px;
     display: none;
+    border: 1px solid var(--line);
   }
   .status {
     text-align: center;
     color: var(--cyan);
-    margin-top: 14px;
+    margin-top: 16px;
     font-size: 13px;
     font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .status::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 10px var(--cyan);
+    animation: pulseDot 1.2s infinite ease-in-out;
   }
   .error-box {
-    background: rgba(255, 92, 108, 0.08);
-    border: 1px solid rgba(255, 92, 108, 0.3);
+    background: rgba(255, 92, 108, 0.1);
+    border: 1px solid rgba(255, 92, 108, 0.35);
     color: var(--danger);
     padding: 14px;
-    border-radius: 3px;
+    border-radius: 8px;
     font-size: 13.5px;
     margin-top: 14px;
-    line-height: 1.4;
+    line-height: 1.45;
   }
   .back-link {
     color: var(--muted);
-    font-size: 13.5px;
+    font-size: 13px;
     text-align: center;
-    margin-top: 16px;
+    margin-top: 18px;
     cursor: pointer;
     font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: color 0.15s ease;
   }
   .back-link:hover { color: var(--cyan); }
 
   #qr-reader {
     width: 100%;
-    border-radius: 3px;
+    border-radius: 8px;
     overflow: hidden;
     border: 1px solid var(--line);
   }
@@ -202,50 +985,56 @@
     gap: 8px;
     width: 100%;
     padding: 13px;
-    border-radius: 3px;
+    border-radius: 8px;
     border: 1px solid var(--cyan);
-    background: transparent;
+    background: rgba(55, 230, 224, 0.08);
     color: var(--cyan);
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 14.5px;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: all 0.18s ease;
   }
-  .btn:hover { background: var(--cyan-dim); }
+  .btn:hover {
+    background: var(--cyan);
+    color: #060b11;
+    box-shadow: 0 0 20px rgba(55, 230, 224, 0.4);
+  }
 
-  /* ==== Sonuç ==== */
+  /* Sonuç Ekranı */
   .result h2 {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 18px;
-    margin: 0 0 2px;
+    font-size: 20px;
+    margin: 0 0 4px;
+    color: #ffffff;
   }
   .badge {
     display: inline-block;
     padding: 4px 10px;
-    border-radius: 3px;
+    border-radius: 4px;
     font-size: 11px;
     font-family: 'JetBrains Mono', monospace;
     letter-spacing: 0.03em;
   }
-  .badge-dusuk { background: rgba(55,230,224,0.12); color: var(--cyan); }
-  .badge-orta { background: rgba(255,157,71,0.12); color: var(--amber); }
-  .badge-yuksek { background: rgba(255,92,108,0.12); color: var(--danger); }
+  .badge-dusuk { background: rgba(55,230,224,0.14); color: var(--cyan); border: 1px solid rgba(55,230,224,0.3); }
+  .badge-orta { background: rgba(255,157,71,0.14); color: var(--amber); border: 1px solid rgba(255,157,71,0.3); }
+  .badge-yuksek { background: rgba(255,92,108,0.14); color: var(--danger); border: 1px solid rgba(255,92,108,0.3); }
   .risk-score {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 42px;
-    font-weight: 700;
-    margin: 6px 0 8px;
+    font-size: 46px;
+    font-weight: 800;
+    margin: 8px 0 10px;
+    line-height: 1;
   }
-  ul.ingredients { padding-left: 18px; margin: 8px 0; font-size: 14px; }
-  ul.ingredients li { margin-bottom: 4px; }
+  ul.ingredients { padding-left: 18px; margin: 10px 0; font-size: 13.5px; line-height: 1.5; }
+  ul.ingredients li { margin-bottom: 4px; color: #d6dee6; }
   .additive-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 9px 0;
     border-bottom: 1px solid var(--line);
-    font-size: 14px;
+    font-size: 13.5px;
   }
   .additive-row:last-child { border-bottom: none; }
 
@@ -253,8 +1042,8 @@
     color: var(--muted);
     font-size: 11px;
     text-align: center;
-    max-width: 360px;
-    margin-top: 28px;
+    max-width: 420px;
+    margin-top: 32px;
     line-height: 1.5;
   }
   .hidden { display: none !important; }
@@ -263,57 +1052,115 @@
 <body>
 
 <div class="brand">
-  <p class="brand-mark">SCAN · ANALYZE · KNOW</p>
+  <div class="brand-badge">BİYOKİMYASAL GIDA RÖNTGENİ</div>
   <h1>🩻 Intus</h1>
 </div>
-<p class="subtitle">Ne yiyeceğini gerçekten bil. Bir yöntem seç, taramaya başla.</p>
+<p class="subtitle">Ne yediğini ve vücuduna ne yüklediğini bil. Bir yöntem seç veya önceki taramaları kıyasla.</p>
 
-<!-- ANA MENÜ -->
+<!-- =========================================================
+     ANA MENÜ — MODERN & GÖRSEL 2 TARAMA TUŞU
+     ========================================================= -->
 <div class="scan-grid" id="main-menu">
-  <button class="scan-card" id="btn-ingredients-photo">
-    <span class="reticle"><span class="reticle-inner">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M8 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/>
-        <path d="M9 3v4h6V3"/>
-        <line x1="8" y1="12" x2="16" y2="12"/>
-        <line x1="8" y1="15.5" x2="16" y2="15.5"/>
-        <line x1="8" y1="19" x2="13" y2="19"/>
-      </svg>
-    </span></span>
-    <span class="scan-card-body">
+  <!-- 1. TUŞ: İÇİNDEKİLER VE ETİKET TARAMASI -->
+  <button type="button" class="scan-card scan-card-photo" id="btn-ingredients-photo">
+    <div class="reticle">
+      <div class="reticle-corner reticle-tl"></div>
+      <div class="reticle-corner reticle-tr"></div>
+      <div class="reticle-corner reticle-bl"></div>
+      <div class="reticle-corner reticle-br"></div>
+      <div class="reticle-inner">
+        <svg viewBox="0 0 24 24" fill="none">
+          <!-- Biyokimyasal spektral tarama ve içerik ikonu -->
+          <circle cx="12" cy="12" r="9" stroke="var(--cyan)" stroke-width="1.6" stroke-dasharray="3 2.5"/>
+          <path d="M12 7.5V16.5M7.5 12H16.5" stroke="var(--cyan)" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+          <circle cx="12" cy="12" r="3.6" fill="var(--cyan-dim)" stroke="var(--cyan)" stroke-width="1.8"/>
+          <path d="M12 10.2C12.7 9.3 13.8 9.6 13.8 10.7C13.8 11.8 12.4 12.5 12 13C11.6 12.5 10.2 11.8 10.2 10.7C10.2 9.6 11.3 9.3 12 10.2Z" fill="var(--cyan)"/>
+        </svg>
+      </div>
+      <div class="reticle-laser"></div>
+    </div>
+    <div class="scan-card-body">
+      <div class="scan-card-header-row">
+        <span class="scan-pill scan-pill-photo">SPEKTRAL ETİKET</span>
+        <span class="scan-card-num">01</span>
+      </div>
       <h2>İçindekiler Taraması</h2>
-      <p>Ambalajın içindekiler yazısını çek, tam analiz al.</p>
-    </span>
-    <span class="scan-card-tag">01</span>
+      <p>Ambalajın içindekiler metnini fotoğrafla; katkı, koruyucu ve toksisite karnesini çıkar.</p>
+      <div class="scan-card-meta">
+        <span class="scan-card-hint">📸 Kamera & Galeri</span>
+        <span class="scan-card-action-text">Tahlili Başlat →</span>
+      </div>
+    </div>
   </button>
 
-  <button class="scan-card" id="btn-barcode">
-    <span class="reticle"><span class="reticle-inner">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round">
-        <line x1="4" y1="5" x2="4" y2="19"/>
-        <line x1="8" y1="5" x2="8" y2="19"/>
-        <line x1="11" y1="5" x2="11" y2="19"/>
-        <line x1="14" y1="5" x2="14" y2="19" stroke-width="2.4"/>
-        <line x1="17" y1="5" x2="17" y2="19"/>
-        <line x1="20" y1="5" x2="20" y2="19" stroke-width="2.4"/>
-      </svg>
-    </span></span>
-    <span class="scan-card-body">
+  <!-- 2. TUŞ: BARKOD LAZER TARAMASI -->
+  <button type="button" class="scan-card scan-card-barcode" id="btn-barcode">
+    <div class="reticle">
+      <div class="reticle-corner reticle-tl"></div>
+      <div class="reticle-corner reticle-tr"></div>
+      <div class="reticle-corner reticle-bl"></div>
+      <div class="reticle-corner reticle-br"></div>
+      <div class="reticle-inner">
+        <svg viewBox="0 0 24 24" fill="none">
+          <!-- Hassas Lazer Barkod Röntgen İkonu -->
+          <rect x="3" y="5" width="2" height="14" rx="0.5" fill="var(--text)"/>
+          <rect x="6.5" y="5" width="1.5" height="14" rx="0.5" fill="var(--text)"/>
+          <rect x="9.5" y="5" width="3" height="14" rx="0.5" fill="var(--text)"/>
+          <rect x="14" y="5" width="1.5" height="14" rx="0.5" fill="var(--text)"/>
+          <rect x="17" y="5" width="2.5" height="14" rx="0.5" fill="var(--text)"/>
+          <circle cx="12" cy="12" r="8.5" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="2 3" opacity="0.7"/>
+        </svg>
+      </div>
+      <div class="reticle-laser laser-amber"></div>
+    </div>
+    <div class="scan-card-body">
+      <div class="scan-card-header-row">
+        <span class="scan-pill scan-pill-barcode">GLOBAL VERİTABANI</span>
+        <span class="scan-card-num">02</span>
+      </div>
       <h2>Barkod Taraması</h2>
-      <p>Uluslararası ürün veritabanından anında sonuç.</p>
-    </span>
-    <span class="scan-card-tag">02</span>
+      <p>Kamerayı barkoda tut; uluslararası gıda veri tabanından anında analiz ve E-kodlarını al.</p>
+      <div class="scan-card-meta">
+        <span class="scan-card-hint">⚡ Canlı Lazer Okuyucu</span>
+        <span class="scan-card-action-text">Barkod Oku →</span>
+      </div>
+    </div>
   </button>
 </div>
 
-<input type="file" id="photo-input" accept="image/*" capture="environment">
+<!-- =========================================================
+     2 TUŞUN ALTINDAKİ SON 10 TARAMA LİSTESİ & TIK SİSTEMİ
+     ========================================================= -->
+<div class="history-dock" id="history-dock">
+  <div class="history-dock-header">
+    <div class="history-title-wrap">
+      <h3>Son Taramalar</h3>
+      <span class="history-count-badge" id="history-count-badge">0 Ürün</span>
+    </div>
+    <button type="button" class="history-clear-btn" id="history-clear-btn" title="Geçmişi Temizle">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      Temizle
+    </button>
+  </div>
+  
+  <p class="history-instruction">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    Kıyaslamak istediğin <strong>2 ürünün</strong> başındaki kutucuğu (tık) işaretle.
+  </p>
+
+  <div class="history-items-container" id="history-items-container">
+    <!-- JavaScript ile son 10 tarama doldurulur -->
+  </div>
+</div>
+
+<input type="file" id="photo-input" accept="image/*" capture="environment" class="hidden">
 
 <!-- FOTOĞRAF ÖNİZLEME + DURUM -->
 <div class="card hidden" id="photo-card">
   <img id="preview" alt="Seçilen fotoğraf önizleme">
   <div class="status hidden" id="photo-status">ANALİZ EDİLİYOR…</div>
   <div class="error-box hidden" id="photo-error"></div>
-  <div class="back-link" id="photo-back-link">← ana menü</div>
+  <div class="back-link" id="photo-back-link">← ana menüye dön</div>
 </div>
 
 <!-- BARKOD MODU -->
@@ -322,11 +1169,62 @@
   <div id="qr-reader"></div>
   <div class="status hidden" id="barcode-status">ÜRÜN ARANIYOR…</div>
   <div class="error-box hidden" id="barcode-error"></div>
-  <div class="back-link" id="barcode-back-link">← ana menü</div>
+  <div class="back-link" id="barcode-back-link">← ana menüye dön</div>
 </div>
 
-<!-- SONUÇ -->
+<!-- TEKİL SONUÇ GÖSTERİMİ -->
 <div class="card result hidden" id="result-card"></div>
+
+<!-- =========================================================
+     YÜZEN KIYASLAMA BARI (2 ÜRÜN SEÇİLDİĞİNDE)
+     ========================================================= -->
+<div class="compare-floating-bar hidden" id="compare-floating-bar">
+  <div class="compare-bar-info">
+    <span class="compare-bar-count" id="compare-bar-count">2 Ürün Seçildi</span>
+    <span class="compare-bar-names" id="compare-bar-names">Ürün 1 vs Ürün 2</span>
+  </div>
+  <div class="compare-bar-actions">
+    <button type="button" class="btn-compare-action" id="btn-compare-action">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+      Ürünleri Kıyasla
+    </button>
+    <button type="button" class="btn-compare-cancel" id="btn-compare-cancel" title="Seçimi Temizle">✕</button>
+  </div>
+</div>
+
+<!-- =========================================================
+     YAN YANA KIYASLAMA MODALI (YEŞİL / KIRMIZI ÇERÇEVE)
+     ========================================================= -->
+<div class="modal-overlay hidden" id="compare-modal-overlay">
+  <div class="modal-window">
+    <div class="modal-header">
+      <div class="modal-header-title">
+        <span class="modal-badge-lab">BİYOKİMYASAL RÖNTGEN KIYASLAMASI</span>
+        <h2>İntus Ürün Karşılaştırma Raporu</h2>
+      </div>
+      <button type="button" class="modal-close-btn" id="compare-modal-close" aria-label="Kapat">✕</button>
+    </div>
+
+    <!-- Yapay Zeka Tavsiye & Özet Kutusu -->
+    <div class="compare-verdict-banner" id="compare-verdict-banner"></div>
+
+    <!-- Yan Yana Ürün Kartları (Biri Yeşil, Biri Kırmızı Çerçeve) -->
+    <div class="compare-grid" id="compare-grid"></div>
+
+    <!-- Detaylı Matris Tablosu -->
+    <div class="compare-matrix-wrap">
+      <h3>Detaylı Kriter Kıyaslama Tablosu</h3>
+      <table class="compare-matrix-table" id="compare-matrix-table"></table>
+    </div>
+
+    <!-- Klinik Karar & Tavsiye -->
+    <div class="compare-ai-recommendation" id="compare-ai-recommendation"></div>
+
+    <div class="compare-modal-footer">
+      <button type="button" class="btn" id="compare-modal-close-btn">Pencereyi Kapat</button>
+    </div>
+  </div>
+</div>
 
 <p class="disclaimer">Ürün içerikleri ve doğrulamaları yapay zeka tarafından oluşturulmuştur, kesinlik taşımaz. Bu uygulama tıbbi/beslenme tavsiyesi yerine geçmez.</p>
 
@@ -335,9 +1233,15 @@
 const WORKER_URL = "https://cool-frog-4829.imsalper.workers.dev";
 const RATE_LIMIT_MAX = 50;
 const RATE_LIMIT_WINDOW_MS = 30 * 60 * 1000;
+const HISTORY_STORAGE_KEY = "intus_scan_history_v2";
 
 // ==== DOM referansları ====
 const mainMenu = document.getElementById("main-menu");
+const historyDock = document.getElementById("history-dock");
+const historyItemsContainer = document.getElementById("history-items-container");
+const historyCountBadge = document.getElementById("history-count-badge");
+const historyClearBtn = document.getElementById("history-clear-btn");
+
 const photoInput = document.getElementById("photo-input");
 const photoCard = document.getElementById("photo-card");
 const preview = document.getElementById("preview");
@@ -355,10 +1259,415 @@ const resultCard = document.getElementById("result-card");
 const btnIngredientsPhoto = document.getElementById("btn-ingredients-photo");
 const btnBarcode = document.getElementById("btn-barcode");
 
-let currentPhotoMode = null; // "ingredients_photo"
-let html5QrCode = null;
+// Kıyaslama DOM
+const compareFloatingBar = document.getElementById("compare-floating-bar");
+const compareBarCount = document.getElementById("compare-bar-count");
+const compareBarNames = document.getElementById("compare-bar-names");
+const btnCompareAction = document.getElementById("btn-compare-action");
+const btnCompareCancel = document.getElementById("btn-compare-cancel");
 
-// ==== Rate limit (client-side) ====
+const compareModalOverlay = document.getElementById("compare-modal-overlay");
+const compareModalClose = document.getElementById("compare-modal-close");
+const compareModalCloseBtn = document.getElementById("compare-modal-close-btn");
+const compareVerdictBanner = document.getElementById("compare-verdict-banner");
+const compareGrid = document.getElementById("compare-grid");
+const compareMatrixTable = document.getElementById("compare-matrix-table");
+const compareAiRecommendation = document.getElementById("compare-ai-recommendation");
+
+let currentPhotoMode = null;
+let html5QrCode = null;
+let selectedForCompare = []; // Karşılaştırma için seçilen ürün id'leri (max 2)
+
+// ==== HAZIR DEMO VERİLERİ (Geçmiş boşsa kullanıcının hemen test edebilmesi için) ====
+const DEMO_PRODUCTS = [
+  {
+    id: "demo-1",
+    urun_adi: "Doğal Probiyotik Süzme Yoğurt",
+    saglik_riski_skoru: 12,
+    genel_yorum: "Mükemmel biyoyararlanım. Katkı ve koruyucu maddeden tamamen arındırılmış temiz protein ve probiyotik kaynağı.",
+    eliminasyon_suresi: "6 - 12 saat",
+    icindekiler: ["Pastörize inek sütü", "Yoğurt mayası", "Probiyotik kültürler"],
+    katki_maddeleri: [],
+    timestamp: Date.now() - 1000 * 60 * 15
+  },
+  {
+    id: "demo-2",
+    urun_adi: "Baharatlı Çıtır Patates Cipsi",
+    saglik_riski_skoru: 84,
+    genel_yorum: "Yüksek derecede işlenmiş ürün. Monosodyum glutamat (MSG), yapay aroma vericiler ve yüksek oranda akrilamid/trans yağ içerir.",
+    eliminasyon_suresi: "48 - 72 saat",
+    icindekiler: ["Patates", "Palm ve ayçiçek yağı", "Baharat çeşnisi", "Monosodyum glutamat (E621)", "Maltodekstrin", "Sodyum diasetat (E262)", "Karamel renklendirici (E150d)"],
+    katki_maddeleri: [
+      { isim: "E621 (Monosodyum Glutamat)", risk_seviyesi: "yüksek" },
+      { isim: "E150d (Amonyak Karamel)", risk_seviyesi: "orta" },
+      { isim: "E262 (Sodyum Diasetat)", risk_seviyesi: "düşük" }
+    ],
+    timestamp: Date.now() - 1000 * 60 * 65
+  },
+  {
+    id: "demo-3",
+    urun_adi: "Tam Tahıllı Yulaflı Bisküvi",
+    saglik_riski_skoru: 42,
+    genel_yorum: "Orta seviye risk. Lif oranı yüksek olmakla birlikte rafine şeker ve kabartıcı katkılar barındırmaktadır.",
+    eliminasyon_suresi: "24 - 36 saat",
+    icindekiler: ["Yulaf ezmesi (%42)", "Tam buğday unu", "Bitkisel yağ", "Pancar şekeri", "Amonyum hidrojen karbonat", "Tuz", "Doğala özdeş vanilya aroması"],
+    katki_maddeleri: [
+      { isim: "E503 (Amonyum Karbonat)", risk_seviyesi: "düşük" },
+      { isim: "Yapay Vanilin", risk_seviyesi: "orta" }
+    ],
+    timestamp: Date.now() - 1000 * 60 * 140
+  },
+  {
+    id: "demo-4",
+    urun_adi: "Kakaolu Fındık Kreması",
+    saglik_riski_skoru: 78,
+    genel_yorum: "Yoğun şeker ve doymuş palm yağı yükü. Karaciğer yağlanması ve insülin direncini tetikleyici formül.",
+    eliminasyon_suresi: "36 - 48 saat",
+    icindekiler: ["Şeker (%56)", "Palm yağı", "Fındık (%13)", "Yağsız süt tozu", "Yağı azaltılmış kakao", "Soya lesitini (E322)", "Sentetik vanilin"],
+    katki_maddeleri: [
+      { isim: "E322 (Soya Lesitini)", risk_seviyesi: "düşük" },
+      { isim: "Rafine Palm Yağı Katkıları", risk_seviyesi: "yüksek" },
+      { isim: "Sentetik Vanilin", risk_seviyesi: "orta" }
+    ],
+    timestamp: Date.now() - 1000 * 60 * 260
+  }
+];
+
+// ==== GEÇMİŞ YÖNETİMİ (SON 10 TARAMA) ====
+function getHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) {
+      // İlk açılışta hazır demo verilerini yükle
+      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(DEMO_PRODUCTS));
+      return DEMO_PRODUCTS;
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEMO_PRODUCTS;
+  } catch (e) {
+    return DEMO_PRODUCTS;
+  }
+}
+
+function saveToHistory(data) {
+  try {
+    let history = getHistory();
+    const newItem = {
+      id: "scan-" + Date.now() + "-" + Math.random().toString(36).substr(2, 4),
+      urun_adi: data.urun_adi || "İsimsiz Ürün",
+      saglik_riski_skoru: typeof data.saglik_riski_skoru === "number" ? data.saglik_riski_skoru : 50,
+      genel_yorum: data.genel_yorum || "",
+      eliminasyon_suresi: data.eliminasyon_suresi || "Bilinmiyor",
+      icindekiler: Array.isArray(data.icindekiler) ? data.icindekiler : [],
+      katki_maddeleri: Array.isArray(data.katki_maddeleri) ? data.katki_maddeleri : [],
+      timestamp: Date.now()
+    };
+    // En başa ekle ve max 10 tarama ile sınırla
+    history = [newItem, ...history.filter(h => h.urun_adi !== newItem.urun_adi)].slice(0, 10);
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+    renderHistory();
+  } catch (e) {
+    console.error("Geçmiş kaydedilemedi:", e);
+  }
+}
+
+function renderHistory() {
+  const history = getHistory();
+  historyCountBadge.textContent = `${history.length} / 10 Ürün`;
+
+  if (history.length === 0) {
+    historyItemsContainer.innerHTML = `
+      <div class="history-empty-state">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <p>Henüz kayıtlı tarama yok. Yukarıdaki tuşlardan birini kullanarak ürün tara.</p>
+      </div>
+    `;
+    updateCompareFloatingBar();
+    return;
+  }
+
+  historyItemsContainer.innerHTML = history.map(item => {
+    const isSelected = selectedForCompare.includes(item.id);
+    const riskClass = item.saglik_riski_skoru >= 66 ? "score-high"
+                    : item.saglik_riski_skoru >= 33 ? "score-mid"
+                    : "score-low";
+
+    const riskLabel = item.saglik_riski_skoru >= 66 ? "Yüksek Risk"
+                    : item.saglik_riski_skoru >= 33 ? "Orta Risk"
+                    : "Temiz / Düşük";
+
+    const additiveCount = Array.isArray(item.katki_maddeleri) ? item.katki_maddeleri.length : 0;
+
+    return `
+      <div class="history-item-card ${isSelected ? 'is-selected' : ''}" data-id="${item.id}">
+        <div class="custom-tick-box" title="Kıyaslamak için seç">
+          <svg viewBox="0 0 24 24" fill="none">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <div class="history-item-info">
+          <div class="history-item-name">${escapeHtml(item.urun_adi)}</div>
+          <div class="history-item-meta">
+            <span>🧪 ${additiveCount} Katkı</span>
+            <span>⏱️ ${escapeHtml(item.eliminasyon_suresi || "~24 saat")}</span>
+          </div>
+        </div>
+        <div class="history-item-score">
+          <span class="history-score-pill ${riskClass}">${item.saglik_riski_skoru} · ${riskLabel}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // Kartlara tıklama olayı
+  document.querySelectorAll(".history-item-card").forEach(card => {
+    card.addEventListener("click", (e) => {
+      const id = card.getAttribute("data-id");
+      toggleCompareItem(id);
+    });
+  });
+
+  updateCompareFloatingBar();
+}
+
+function toggleCompareItem(id) {
+  if (selectedForCompare.includes(id)) {
+    selectedForCompare = selectedForCompare.filter(itemId => itemId !== id);
+  } else {
+    if (selectedForCompare.length >= 2) {
+      // 2 ürün dolduysa ilk seçileni çıkartıp yenisini ekle
+      selectedForCompare.shift();
+    }
+    selectedForCompare.push(id);
+  }
+  renderHistory();
+}
+
+function updateCompareFloatingBar() {
+  const history = getHistory();
+  if (selectedForCompare.length === 2) {
+    const item1 = history.find(h => h.id === selectedForCompare[0]);
+    const item2 = history.find(h => h.id === selectedForCompare[1]);
+    if (item1 && item2) {
+      compareBarNames.textContent = `${item1.urun_adi}  ⚡  ${item2.urun_adi}`;
+      compareBarCount.textContent = "2 Ürün Karşılaştırmaya Hazır";
+      compareFloatingBar.classList.remove("hidden");
+      return;
+    }
+  } else if (selectedForCompare.length === 1) {
+    const item1 = history.find(h => h.id === selectedForCompare[0]);
+    compareBarNames.textContent = `${item1 ? item1.urun_adi : '1 Ürün Seçildi'} (1 ürün daha seçin)`;
+    compareBarCount.textContent = "1 / 2 Ürün Seçildi";
+    compareFloatingBar.classList.remove("hidden");
+    return;
+  }
+  compareFloatingBar.classList.add("hidden");
+}
+
+historyClearBtn.addEventListener("click", () => {
+  if (confirm("Kayıtlı tarama geçmişini temizlemek istiyor musunuz?")) {
+    localStorage.removeItem(HISTORY_STORAGE_KEY);
+    selectedForCompare = [];
+    renderHistory();
+  }
+});
+
+btnCompareCancel.addEventListener("click", () => {
+  selectedForCompare = [];
+  renderHistory();
+});
+
+// ==== YAN YANA KARŞILAŞTIRMA MANTIĞI & YEŞİL/KIRMIZI ÇERÇEVELER ====
+btnCompareAction.addEventListener("click", () => {
+  if (selectedForCompare.length !== 2) return;
+  const history = getHistory();
+  const prodA = history.find(h => h.id === selectedForCompare[0]);
+  const prodB = history.find(h => h.id === selectedForCompare[1]);
+  if (!prodA || !prodB) return;
+  runSideBySideComparison(prodA, prodB);
+});
+
+function runSideBySideComparison(prodA, prodB) {
+  // Sağlık riski skoru ne kadar DÜŞÜK ise ürün o kadar SAĞLIKLIDIR.
+  // Katkı maddesi sayısı ve yüksek riskli katkı sayısı da hesaba katılır.
+  const riskA = prodA.saglik_riski_skoru;
+  const riskB = prodB.saglik_riski_skoru;
+
+  const addCountA = Array.isArray(prodA.katki_maddeleri) ? prodA.katki_maddeleri.length : 0;
+  const addCountB = Array.isArray(prodB.katki_maddeleri) ? prodB.katki_maddeleri.length : 0;
+
+  const highRiskA = (prodA.katki_maddeleri || []).filter(a => a.risk_seviyesi === "yüksek").length;
+  const highRiskB = (prodB.katki_maddeleri || []).filter(a => a.risk_seviyesi === "yüksek").length;
+
+  let winner = null;
+  let loser = null;
+  let isTie = false;
+
+  if (riskA < riskB) {
+    winner = prodA;
+    loser = prodB;
+  } else if (riskB < riskA) {
+    winner = prodB;
+    loser = prodA;
+  } else {
+    // Eşitlik durumunda katkı sayısı veya yüksek riskli katkıya bak
+    if (highRiskA < highRiskB || addCountA < addCountB) {
+      winner = prodA;
+      loser = prodB;
+    } else if (highRiskB < highRiskA || addCountB < addCountA) {
+      winner = prodB;
+      loser = prodA;
+    } else {
+      isTie = true;
+    }
+  }
+
+  // 1. Yapay Zeka Karar Özeti
+  if (isTie) {
+    compareVerdictBanner.style.borderColor = "var(--amber)";
+    compareVerdictBanner.style.background = "rgba(255, 157, 71, 0.08)";
+    compareVerdictBanner.innerHTML = `
+      <div class="verdict-header" style="color:var(--amber);">⚖️ EŞDEĞER RİSK PROFİLİ</div>
+      <div class="verdict-body">
+        Her iki ürün de benzer sağlık riski skoruna (${riskA}/100) ve katkı yoğunluğuna sahip.
+      </div>
+    `;
+  } else {
+    const riskDiff = Math.abs(winner.saglik_riski_skoru - loser.saglik_riski_skoru);
+    const winAdd = (winner.katki_maddeleri || []).length;
+    const loseAdd = (loser.katki_maddeleri || []).length;
+
+    compareVerdictBanner.style.borderColor = "rgba(16, 185, 129, 0.35)";
+    compareVerdictBanner.style.background = "rgba(16, 185, 129, 0.1)";
+    compareVerdictBanner.innerHTML = `
+      <div class="verdict-header">🏆 BİYOKİMYASAL TAVSİYE: ${escapeHtml(winner.urun_adi).toUpperCase()}</div>
+      <div class="verdict-body">
+        <strong>${escapeHtml(winner.urun_adi)}</strong>, diğer ürüne kıyasla <strong>%${riskDiff} daha düşük toksik risk</strong> taşımaktadır.
+        Daha az katkı/koruyucu (${winAdd} vs ${loseAdd} adet) içermesi ve metabolik eliminasyonunun daha hızlı olması sebebiyle kesinlikle tavsiye edilen seçenektir.
+      </div>
+    `;
+  }
+
+  // 2. Yan Yana Kartlar (Yeşil Çerçeve & Kırmızı Çerçeve)
+  let cardsHtml = "";
+  if (isTie) {
+    cardsHtml = [prodA, prodB].map(prod => createCompareCardHtml(prod, "tie")).join("");
+  } else {
+    // Kazanan (Yeşil Çerçeveli) ve Kaybeden (Kırmızı Çerçeveli)
+    cardsHtml = createCompareCardHtml(winner, "winner") + createCompareCardHtml(loser, "loser");
+  }
+  compareGrid.innerHTML = cardsHtml;
+
+  // 3. Detaylı Karşılaştırma Matrisi Tablosu
+  const targetA = isTie ? prodA : winner;
+  const targetB = isTie ? prodB : loser;
+  const labelA = isTie ? "Ürün 1" : "🏆 Önerilen (İyi)";
+  const labelB = isTie ? "Ürün 2" : "⚠️ Riskli (Kötü)";
+
+  compareMatrixTable.innerHTML = `
+    <thead>
+      <tr>
+        <th>Kriter</th>
+        <th>${escapeHtml(targetA.urun_adi)}<br><small style="color:${isTie ? 'var(--amber)' : '#10b981'}">${labelA}</small></th>
+        <th>${escapeHtml(targetB.urun_adi)}<br><small style="color:${isTie ? 'var(--amber)' : '#ef4444'}">${labelB}</small></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Sağlık Riski Skoru</strong></td>
+        <td class="${isTie ? '' : 'col-win'}">${targetA.saglik_riski_skoru} / 100</td>
+        <td class="${isTie ? '' : 'col-lose'}">${targetB.saglik_riski_skoru} / 100</td>
+      </tr>
+      <tr>
+        <td><strong>Katkı Maddesi Sayısı</strong></td>
+        <td class="${isTie ? '' : 'col-win'}">${(targetA.katki_maddeleri || []).length} Adet</td>
+        <td class="${isTie ? '' : 'col-lose'}">${(targetB.katki_maddeleri || []).length} Adet</td>
+      </tr>
+      <tr>
+        <td><strong>Yüksek Riskli Katkı</strong></td>
+        <td class="${isTie ? '' : 'col-win'}">${(targetA.katki_maddeleri || []).filter(a => a.risk_seviyesi === 'yüksek').length} Adet</td>
+        <td class="${isTie ? '' : 'col-lose'}">${(targetB.katki_maddeleri || []).filter(a => a.risk_seviyesi === 'yüksek').length} Adet</td>
+      </tr>
+      <tr>
+        <td><strong>Eliminasyon Süresi</strong></td>
+        <td>${escapeHtml(targetA.eliminasyon_suresi || "Bilinmiyor")}</td>
+        <td>${escapeHtml(targetB.eliminasyon_suresi || "Bilinmiyor")}</td>
+      </tr>
+      <tr>
+        <td><strong>Karaciğer & Sindirim Yükü</strong></td>
+        <td class="${isTie ? '' : 'col-win'}">${targetA.saglik_riski_skoru <= 30 ? 'Minimum Yük' : targetA.saglik_riski_skoru <= 65 ? 'Orta Düzey' : 'Ağır Toksik Yük'}</td>
+        <td class="${isTie ? '' : 'col-lose'}">${targetB.saglik_riski_skoru <= 30 ? 'Minimum Yük' : targetB.saglik_riski_skoru <= 65 ? 'Orta Düzey' : 'Ağır Toksik Yük'}</td>
+      </tr>
+    </tbody>
+  `;
+
+  // 4. Klinik Tavsiye Notu
+  if (!isTie) {
+    compareAiRecommendation.innerHTML = `
+      <strong>🩺 Uzman Klinik Kararı:</strong> Tüketim tercihinde <strong>${escapeHtml(winner.urun_adi)}</strong> seçilmelidir.
+      ${escapeHtml(loser.urun_adi)}, içerdiği koruyucu ve katkı maddeleri sebebiyle vücutta daha uzun süre kalmakta ve metabolik detoksifikasyon sistemlerini daha fazla yormaktadır.
+    `;
+  } else {
+    compareAiRecommendation.innerHTML = `
+      <strong>🩺 Uzman Klinik Kararı:</strong> Her iki ürünün de katkı ve metabolik profil seviyesi birbirine yakındır. Porsiyon kontrolüne dikkat edilmesi önerilir.
+    `;
+  }
+
+  compareModalOverlay.classList.remove("hidden");
+}
+
+function createCompareCardHtml(prod, type) {
+  const isWinner = type === "winner";
+  const isLoser = type === "loser";
+  const cardClass = isWinner ? "winner-card" : isLoser ? "loser-card" : "tie-card";
+
+  const ribbonText = isWinner ? "🏆 DAHA SAĞLIKLI · ÖNERİLEN"
+                   : isLoser ? "⚠️ RİSKLİ SEÇENEK"
+                   : "⚖️ EŞDEĞER RİSK";
+
+  const additiveCount = (prod.katki_maddeleri || []).length;
+  const highRiskCount = (prod.katki_maddeleri || []).filter(a => a.risk_seviyesi === "yüksek").length;
+
+  return `
+    <div class="compare-card ${cardClass}">
+      <span class="card-status-ribbon">${ribbonText}</span>
+      <h3 class="compare-card-title">${escapeHtml(prod.urun_adi)}</h3>
+      
+      <div class="compare-card-score-box">
+        <div class="compare-card-score-num">${prod.saglik_riski_skoru}</div>
+        <div class="compare-card-score-label">/ 100 RİSK PUANI</div>
+      </div>
+
+      <div class="compare-metric-row">
+        <span class="compare-metric-label">Katkı Maddeleri</span>
+        <span class="compare-metric-val">${additiveCount} adet</span>
+      </div>
+      <div class="compare-metric-row">
+        <span class="compare-metric-label">Yüksek Riskli Katkı</span>
+        <span class="compare-metric-val" style="color:${highRiskCount > 0 ? 'var(--danger)' : 'var(--success)'}">${highRiskCount} adet</span>
+      </div>
+      <div class="compare-metric-row">
+        <span class="compare-metric-label">Vücuttan Atılma</span>
+        <span class="compare-metric-val">${escapeHtml(prod.eliminasyon_suresi || "Bilinmiyor")}</span>
+      </div>
+      <div class="compare-metric-row" style="border:none;margin-top:6px;padding-top:8px;">
+        <p style="margin:0;font-size:12px;color:var(--muted);line-height:1.45;">${escapeHtml(prod.genel_yorum || "")}</p>
+      </div>
+    </div>
+  `;
+}
+
+// Modal Kapatma
+function closeCompareModal() {
+  compareModalOverlay.classList.add("hidden");
+}
+compareModalClose.addEventListener("click", closeCompareModal);
+compareModalCloseBtn.addEventListener("click", closeCompareModal);
+compareModalOverlay.addEventListener("click", (e) => {
+  if (e.target === compareModalOverlay) closeCompareModal();
+});
+
+// ==== RATE LIMIT ====
 function checkRateLimit() {
   const now = Date.now();
   let timestamps = JSON.parse(localStorage.getItem("intus_scan_log") || "[]");
@@ -369,7 +1678,7 @@ function checkRateLimit() {
   return true;
 }
 
-// ==== Menü -> mod seçimi ====
+// ==== MENÜ -> MOD SEÇİMİ ====
 btnIngredientsPhoto.addEventListener("click", () => openPhotoMode("ingredients_photo"));
 btnBarcode.addEventListener("click", () => openBarcodeMode());
 
@@ -377,6 +1686,8 @@ function openPhotoMode(mode) {
   currentPhotoMode = mode;
   resetAll();
   mainMenu.classList.add("hidden");
+  historyDock.classList.add("hidden");
+  compareFloatingBar.classList.add("hidden");
   photoCard.classList.remove("hidden");
   photoInput.click();
 }
@@ -384,6 +1695,8 @@ function openPhotoMode(mode) {
 function openBarcodeMode() {
   resetAll();
   mainMenu.classList.add("hidden");
+  historyDock.classList.add("hidden");
+  compareFloatingBar.classList.add("hidden");
   barcodeCard.classList.remove("hidden");
   startBarcodeScanner();
 }
@@ -391,6 +1704,8 @@ function openBarcodeMode() {
 photoBackLink.addEventListener("click", () => {
   photoCard.classList.add("hidden");
   mainMenu.classList.remove("hidden");
+  historyDock.classList.remove("hidden");
+  renderHistory();
   resetAll();
 });
 
@@ -398,6 +1713,8 @@ barcodeBackLink.addEventListener("click", () => {
   stopBarcodeScanner();
   barcodeCard.classList.add("hidden");
   mainMenu.classList.remove("hidden");
+  historyDock.classList.remove("hidden");
+  renderHistory();
   resetAll();
 });
 
@@ -410,7 +1727,7 @@ function resetAll() {
   preview.src = "";
 }
 
-// ==== Fotoğraf akışı ====
+// ==== FOTOĞRAF AKIŞI ====
 photoInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   photoInput.value = "";
@@ -426,7 +1743,7 @@ photoInput.addEventListener("change", async (e) => {
   preview.src = URL.createObjectURL(file);
   preview.style.display = "block";
   photoStatus.classList.remove("hidden");
-  photoStatus.textContent = "ANALİZ EDİLİYOR…";
+  photoStatus.textContent = "BİYOKİMYASAL ANALİZ YAPILIYOR…";
 
   try {
     const base64 = await compressImageToBase64(file);
@@ -451,6 +1768,7 @@ photoInput.addEventListener("change", async (e) => {
     if (data.basarili === false) {
       showPhotoError(data.kullanici_mesaji || "Analiz yapılamadı.");
     } else if (data.basarili === true) {
+      saveToHistory(data);
       renderResult(data);
     } else {
       showPhotoError("Beklenmeyen bir yanıt alındı, lütfen tekrar dene.");
@@ -462,9 +1780,6 @@ photoInput.addEventListener("change", async (e) => {
   }
 });
 
-// Fotoğrafı göndermeden önce küçültüp her zaman JPEG'e çevirir.
-// Telefon kamerasından gelen büyük/HEIC dosyaların analiz hatasına
-// sebep olmasını engellemek için (boyut + format normalizasyonu).
 function compressImageToBase64(file, maxDimension = 1600, quality = 0.85) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -506,7 +1821,7 @@ function showPhotoError(msg) {
   photoError.classList.remove("hidden");
 }
 
-// ==== Barkod akışı — uluslararası API (Open Food Facts) doğrudan bağlı ====
+// ==== BARKOD AKIŞI ====
 function startBarcodeScanner() {
   html5QrCode = new Html5Qrcode("qr-reader");
   html5QrCode.start(
@@ -579,6 +1894,7 @@ async function onBarcodeDetected(decodedText) {
 
     if (data.basarili === true) {
       barcodeCard.classList.add("hidden");
+      saveToHistory(data);
       renderResult(data);
     } else {
       barcodeError.textContent = data.kullanici_mesaji || "Analiz yapılamadı.";
@@ -592,7 +1908,7 @@ async function onBarcodeDetected(decodedText) {
   }
 }
 
-// ==== Sonuç gösterimi ====
+// ==== SONUÇ GÖSTERİMİ ====
 function renderResult(data) {
   const riskClass = data.saglik_riski_skoru >= 66 ? "badge-yuksek"
                    : data.saglik_riski_skoru >= 33 ? "badge-orta"
@@ -619,9 +1935,19 @@ function renderResult(data) {
       <ul class="ingredients">${data.icindekiler.map(i => `<li>${escapeHtml(i)}</li>`).join("")}</ul>
     ` : ""}
     ${additivesHtml ? `<p style="font-size:14px;"><strong>Katkı Maddeleri</strong></p>${additivesHtml}` : ""}
-    <button class="btn" style="margin-top:18px;" onclick="location.reload()">Yeni Tarama</button>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn" style="flex:1;" onclick="returnToMainMenu()">← Menüye & Taramalara Dön</button>
+      <button class="btn" style="flex:1;border-color:var(--line);color:var(--text);background:transparent;" onclick="location.reload()">Yeni Tarama</button>
+    </div>
   `;
   resultCard.classList.remove("hidden");
+}
+
+function returnToMainMenu() {
+  resetAll();
+  mainMenu.classList.remove("hidden");
+  historyDock.classList.remove("hidden");
+  renderHistory();
 }
 
 function escapeHtml(str) {
@@ -629,6 +1955,11 @@ function escapeHtml(str) {
   div.textContent = str ?? "";
   return div.innerHTML;
 }
+
+// Sayfa yüklendiğinde geçmişi yükle
+window.addEventListener("DOMContentLoaded", () => {
+  renderHistory();
+});
 </script>
 
 </body>
